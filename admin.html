@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin / Multi tienda</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { 
+            --primary: #6366f1; 
+            --primary-dark: #4f46e5; 
+            --success: #10b981; 
+            --danger: #ef4444; 
+            --warning: #f59e0b; 
+            --bg-body: #f1f5f9; 
+            --bg-card: #ffffff; 
+            --text-main: #1e293b; 
+            --text-muted: #64748b; 
+            --sidebar-bg: #1e293b; 
+            --sidebar-text: #94a3b8; 
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+            background: var(--bg-body); 
+            color: var(--text-main); 
+            font-size: 14px; 
+        }
+        .sidebar { 
+            width: 280px; 
+            background: var(--sidebar-bg); 
+            height: 100vh; 
+            position: fixed; 
+            left: 0; 
+            top: 0; 
+            padding: 24px 16px; 
+            transition: 0.3s; 
+            z-index: 1000; 
+            display: flex; 
+            flex-direction: column; 
+            overflow-y: auto;
+        }
+        .main-content { 
+            margin-left: 280px; 
+            padding: 30px; 
+            min-height: 100vh; 
+        }
+        .mobile-menu-btn { 
+            display: none; 
+            position: fixed; 
+            top: 20px; 
+            left: 20px; 
+            z-index: 1100; 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            padding: 12px 18px; 
+            border-radius: 12px; 
+            cursor: pointer; 
+        }
+        @media (max-width: 768px) { 
+            .mobile-menu-btn { display: block; } 
+            .sidebar { transform: translateX(-100%); } 
+            .sidebar.active { transform: translateX(0); } 
+            .main-content { margin-left: 0; padding: 80px 20px 30px; } 
+        }
+        .sidebar-brand { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            padding: 8px 12px; 
+            margin-bottom: 32px; 
+            color: white; 
+        }
+        .sidebar-brand i { font-size: 28px; color: var(--primary); }
+        .sidebar-brand span { font-size: 1.3rem; font-weight: 700; }
+        .nav-item { 
+            padding: 12px 16px; 
+            border-radius: 12px; 
+            color: var(--sidebar-text); 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            gap: 14px; 
+            margin-bottom: 6px; 
+            transition: 0.2s; 
+            font-weight: 500; 
+            position: relative;
+        }
+        .nav-item:hover, .nav-item.active { background: var(--primary); color: white; }
+        .nav-item .new-order-indicator {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #10b981;
+            display: none;
+            box-shadow: 0 0 15px #10b981;
+            border: 2px solid white;
+            animation: pulse-green 1.5s infinite;
+        }
+        @keyframes pulse-green {
+            0%, 100% { opacity: 1; transform: translateY(-50%) scale(1); }
+            50% { opacity: 0.6; transform: translateY(-50%) scale(1.2); }
+        }
+        .nav-item .new-order-indicator.active { display: block; }
+        .tienda-selector { 
+            background: rgba(255,255,255,0.05); 
+            border-radius: 14px; 
+            padding: 16px; 
+            margin-bottom: 20px; 
+        }
+        .tienda-selector select { 
+            background: rgba(255,255,255,0.1); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            color: white; 
+            border-radius: 10px; 
+            padding: 10px 12px; 
+            width: 100%; 
+        }
+        .tienda-selector select option { background: var(--sidebar-bg); }
+        .card { 
+            background: var(--bg-card); 
+            border-radius: 20px; 
+            border: 1px solid #e2e8f0; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04); 
+        }
+        .btn-primary { background: var(--primary); border: none; font-weight: 500; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-whatsapp { background: #25D366; color: white; border: none; padding: 8px 16px; border-radius: 10px; font-weight: 500; }
+        .btn-whatsapp:hover { background: #1ebc57; }
+        #loginScreen { 
+            position: fixed; 
+            inset: 0; 
+            background: linear-gradient(135deg, #667eea, #764ba2); 
+            z-index: 2000; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        .login-card { 
+            background: white; 
+            padding: 48px 40px; 
+            border-radius: 28px; 
+            width: 90%; 
+            max-width: 420px; 
+            text-align: center; 
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+        }
+        .table { font-size: 0.9rem; }
+        .table th { 
+            font-weight: 600; 
+            color: var(--text-muted); 
+            text-transform: uppercase; 
+            font-size: 0.75rem; 
+            letter-spacing: 0.5px; 
+            padding: 16px 12px; 
+            background: #f8fafc; 
+        }
+        .table td { padding: 14px 12px; vertical-align: middle; }
+        .order-card { 
+            border-left: 4px solid var(--primary); 
+            margin-bottom: 20px; 
+        }
+        .badge-status { 
+            padding: 6px 12px; 
+            border-radius: 20px; 
+            font-weight: 500; 
+            font-size: 0.75rem; 
+        }
+        .codigo-cliente-badge {
+            background: #f0f9ff;
+            border: 2px dashed #6366f1;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #4f46e5;
+            letter-spacing: 1px;
+        }
+        
+        .store-form-card {
+            background: linear-gradient(135deg, #667eea10, #764ba210);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 30px;
+            border: 1px solid #e2e8f0;
+        }
+        .form-label {
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+        .input-group-text {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .admin-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 16px 24px;
+            border-radius: 16px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            border-left: 5px solid var(--success);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            z-index: 9999;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            font-weight: 500;
+        }
+        .admin-toast.show { transform: translateX(0); }
+        .admin-toast i { color: var(--success); font-size: 1.2rem; }
+        
+        .info-box {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #0369a1;
+        }
+        .info-box i {
+            margin-right: 8px;
+            color: #0284c7;
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i> Menú</button>
+
+<div id="loginScreen">
+    <div class="login-card">
+        <i class="fas fa-crown" style="font-size: 48px; color: var(--primary); margin-bottom: 20px;"></i>
+        <h2 style="margin-bottom: 10px;">Tienda La Reina</h2>
+        <p class="text-muted mb-4">Panel Administrativo</p>
+        <form onsubmit="login(event)">
+            <div class="mb-3">
+                <input type="password" id="passInput" class="form-control" placeholder="Contraseña" required style="padding: 12px;">
+            </div>
+            <button class="btn btn-primary w-100" style="padding: 12px;">Ingresar</button>
+        </form>
+    </div>
+</div>
+
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><i class="fas fa-store"></i><span>Tienda La Reina</span></div>
+    <div class="tienda-selector">
+        <label class="text-white-50 mb-2">Tienda Activa</label>
+        <select id="tiendaSelect" class="form-select"></select>
+    </div>
+    <div class="nav-item active" data-section="products" onclick="showSection('products')"><i class="fas fa-box"></i> Productos</div>
+    <div class="nav-item" data-section="orders" onclick="showSection('orders')">
+        <i class="fas fa-shopping-cart"></i> Pedidos
+        <span class="new-order-indicator" id="newOrderIndicator"></span>
+    </div>
+    <div class="nav-item" data-section="stores" onclick="showSection('stores')"><i class="fas fa-store-alt"></i> Tiendas</div>
+    <div class="nav-item" data-section="settings" onclick="showSection('settings')"><i class="fas fa-cog"></i> Configuración</div>
+    <div style="flex:1;"></div>
+    <div class="nav-item text-danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Salir</div>
+</div>
+
+<div class="main-content" id="app" style="display:none;">
+    <!-- Vista Productos -->
+    <div id="view-products">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3><i class="fas fa-box me-2" style="color:var(--primary);"></i>Productos - <span id="currentStoreName">Electrodomésticos</span></h3>
+            <button class="btn btn-primary" onclick="openProductModal()"><i class="fas fa-plus"></i> Nuevo Producto</button>
+        </div>
+        <div class="card p-3">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr><th>Img</th><th>Nombre</th><th>Precio</th><th>Desc</th><th>Categoría</th><th>Tamaño</th><th>Estado</th><th>Acciones</th></tr>
+                    </thead>
+                    <tbody id="productsList"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Vista Pedidos -->
+    <div id="view-orders" style="display:none;">
+        <div class="d-flex justify-content-between mb-4">
+            <h3><i class="fas fa-shopping-cart me-2" style="color:var(--primary);"></i>Pedidos - <span id="currentStoreNameOrders">Electrodomésticos</span></h3>
+            <div>
+                <span class="badge bg-primary me-2" id="orderCount">0</span>
+                <button class="btn btn-outline-danger" onclick="deleteAllOrders()"><i class="fas fa-trash"></i> Limpiar</button>
+            </div>
+        </div>
+        <div id="ordersList"></div>
+    </div>
+    
+    <!-- Vista Tiendas -->
+    <div id="view-stores" style="display:none;">
+        <h3 class="mb-4"><i class="fas fa-store-alt me-2" style="color:var(--primary);"></i>Gestión de Tiendas</h3>
+        
+        <div class="store-form-card">
+            <h5 class="mb-3"><i class="fas fa-plus-circle" style="color: var(--primary);"></i> Agregar Nueva Tienda</h5>
+            <form id="storeForm" onsubmit="saveStore(event)">
+                <input type="hidden" id="storeId">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">ID de Tienda (slug)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-tag"></i></span>
+                            <input type="text" id="storeSlug" class="form-control" placeholder="ej. electro" required>
+                        </div>
+                        <small class="text-muted">Sin espacios ni caracteres especiales</small>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Nombre Comercial</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-store"></i></span>
+                            <input type="text" id="storeDisplayName" class="form-control" placeholder="Electrodomésticos Premium" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Icono (Emoji)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-icons"></i></span>
+                            <input type="text" id="storeIcon" class="form-control" placeholder="⚡" value="⚡">
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Descripción</label>
+                        <textarea id="storeDescription" class="form-control" rows="2" placeholder="Breve descripción de la tienda..."></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Categorías Iniciales</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-list"></i></span>
+                            <input type="text" id="storeCategories" class="form-control" placeholder="refrigeradores, lavadoras, otros" value="otros">
+                        </div>
+                        <small class="text-muted">Separadas por comas</small>
+                    </div>
+                    
+                    <!-- Configuración de Tienda -->
+                    <div class="col-12 mt-3">
+                        <h6 class="mb-3"><i class="fas fa-cog"></i> Configuración de Tienda</h6>
+                    </div>
+                    
+                    <!-- Envío -->
+                    <div class="col-md-4">
+                        <label class="form-label">Envío Disponible</label>
+                        <select id="storeEnvioDisponible" class="form-select">
+                            <option value="true">✅ Sí</option>
+                            <option value="false">❌ No</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Costo de Envío (CUP)</label>
+                        <input type="number" id="storeEnvioCosto" class="form-control" value="0" min="0">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Tiempo Estimado</label>
+                        <input type="text" id="storeEnvioTiempo" class="form-control" value="24-48 horas">
+                    </div>
+                    
+                    <!-- Garantía -->
+                    <div class="col-md-4">
+                        <label class="form-label">Garantía Disponible</label>
+                        <select id="storeGarantiaDisponible" class="form-select">
+                            <option value="true">✅ Sí</option>
+                            <option value="false">❌ No</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Duración</label>
+                        <input type="text" id="storeGarantiaDuracion" class="form-control" value="12 meses">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Descripción</label>
+                        <input type="text" id="storeGarantiaDesc" class="form-control" value="Garantía contra defectos">
+                    </div>
+                    
+                    <!-- Métodos de Pago -->
+                    <div class="col-md-6">
+                        <label class="form-label">Métodos de Pago</label>
+                        <div class="d-flex gap-3 mt-2">
+                            <label class="form-check">
+                                <input type="checkbox" id="pagoEfectivo" checked> Efectivo
+                            </label>
+                            <label class="form-check">
+                                <input type="checkbox" id="pagoTransferencia" checked> Transferencia
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Teléfono Contacto</label>
+                        <input type="text" id="storeTelefono" class="form-control" value="+53 5XXXXXXX">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Email Contacto</label>
+                        <input type="text" id="storeEmail" class="form-control" value="contacto@tienda.com">
+                    </div>
+                    
+                    <!-- Datos Bancarios -->
+                    <div class="col-12 mt-3">
+                        <h6 class="mb-3"><i class="fas fa-university"></i> Datos para Transferencia</h6>
+                        <div class="info-box mb-3">
+                            <i class="fas fa-info-circle"></i>
+                            Estos datos se mostrarán al cliente cuando seleccione "Transferencia" como método de pago.
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Número de Tarjeta</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-credit-card"></i></span>
+                            <input type="text" id="storeNumeroTarjeta" class="form-control" placeholder="1234 5678 9012 3456">
+                        </div>
+                        <small class="text-muted">Obligatorio para habilitar pagos por transferencia</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">WhatsApp para Comprobante</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fab fa-whatsapp"></i></span>
+                            <input type="text" id="storeWhatsAppConfirmacion" class="form-control" placeholder="+53 5XXXXXXX">
+                        </div>
+                        <small class="text-muted">Donde el cliente enviará la captura del pago</small>
+                    </div>
+                    
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> <span id="storeSubmitText">Crear Tienda</span>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary ms-2" onclick="resetStoreForm()">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <div class="card p-3">
+            <h5 class="mb-3"><i class="fas fa-list-ul"></i> Tiendas Registradas</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr><th>ID</th><th>Icono</th><th>Nombre</th><th>Descripción</th><th>Categorías</th><th>Acciones</th></tr>
+                    </thead>
+                    <tbody id="storesList"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Vista Configuración -->
+    <div id="view-settings" style="display:none;">
+        <h3 class="mb-4"><i class="fas fa-cog me-2" style="color:var(--primary);"></i>Configuración Global</h3>
+        <div class="card" style="max-width:500px;">
+            <div class="card-header fw-bold">Tasas de Cambio</div>
+            <div class="card-body">
+                <form onsubmit="saveCurrencyConfig(event)">
+                    <div class="mb-4">
+                        <label class="form-label">1 USD equivale a:</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" step="0.01" id="rateUSD" class="form-control" required>
+                            <span class="input-group-text">CUP</span>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">1 EUR equivale a:</label>
+                        <div class="input-group">
+                            <span class="input-group-text">€</span>
+                            <input type="number" step="0.01" id="rateEUR" class="form-control" required>
+                            <span class="input-group-text">CUP</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary w-100">Guardar Configuración</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Producto -->
+<div class="modal fade" id="productModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5>Producto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="productFormData">
+                    <input type="hidden" id="productId">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" id="prodName" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descripción</label>
+                        <textarea id="prodDescription" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Precio (CUP)</label>
+                            <input type="number" id="prodPrice" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Descuento (%)</label>
+                            <input type="number" id="prodDiscount" class="form-control" value="0">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Categoría</label>
+                            <select id="prodCategory" class="form-select"></select>
+                            <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="quickAddCategory()"><i class="fas fa-plus"></i> Nueva</button>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Tamaño</label>
+                            <select id="prodSize" class="form-select">
+                                <option value="pequeno">📐 Pequeño</option>
+                                <option value="grande">📏 Grande</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Estado</label>
+                            <select id="prodStock" class="form-select">
+                                <option value="true">✅ Disponible</option>
+                                <option value="false">❌ Agotado</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">URL Imagen</label>
+                        <input type="text" id="prodImage" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Subir archivo</label>
+                        <input type="file" id="prodFile" class="form-control" accept="image/*">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveProduct()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification -->
+<div class="admin-toast" id="adminToast">
+    <i class="fas fa-bell"></i>
+    <span id="adminToastMsg">Nuevo pedido recibido</span>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // ============================================
+    // ADMIN PANEL - VERSIÓN COMPLETAMENTE CORREGIDA
+    // ============================================
+    let ADMIN_PASS = "";
+    let productModal, categoriasActuales = [];
+    let tiendasDisponibles = [];
+    let lastOrderCount = 0;
+    let orderCheckInterval;
+    let currentToastTimeout = null;
+    
+    function showAdminToast(message, type = 'success') {
+        const toast = document.getElementById('adminToast');
+        const icon = toast.querySelector('i');
+        const msgSpan = document.getElementById('adminToastMsg');
+        
+        if (currentToastTimeout) clearTimeout(currentToastTimeout);
+        
+        toast.style.borderLeftColor = type === 'success' ? '#10b981' : '#ef4444';
+        icon.style.color = type === 'success' ? '#10b981' : '#ef4444';
+        icon.className = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
+        msgSpan.innerText = message;
+        
+        toast.classList.add('show');
+        currentToastTimeout = setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+    
+    async function authFetch(url, options = {}) {
+        if (!ADMIN_PASS) {
+            throw new Error('No autenticado');
+        }
+        const separator = url.includes('?') ? '&' : '?';
+        const authUrl = `${url}${separator}password=${ADMIN_PASS}`;
+        const response = await fetch(authUrl, options);
+        if (response.status === 401) {
+            logout();
+            throw new Error('Sesión expirada');
+        }
+        return response;
+    }
+    
+    async function loadTiendaSelector() {
+        try {
+            console.log("=== Cargando tiendas ===");
+            const response = await authFetch('/api/admin/tiendas');
+            const tiendas = await response.json();
+            console.log("Tiendas encontradas:", tiendas);
+            const select = document.getElementById('tiendaSelect');
+            if (!tiendas || tiendas.length === 0) {
+                select.innerHTML = '<option value="">⚠️ No hay tiendas - Crea una primero</option>';
+                return;
+            }
+            tiendasDisponibles = tiendas;
+            select.innerHTML = '';
+            tiendas.forEach(tienda => {
+                const option = document.createElement('option');
+                option.value = tienda.id;
+                option.textContent = `${tienda.icono || '🛒'} ${tienda.nombre}`;
+                select.appendChild(option);
+            });
+            if (tiendas.length > 0) select.value = tiendas[0].id;
+            updateStoreName();
+            console.log("✅ Selector actualizado con", tiendas.length, "tiendas");
+        } catch(error) {
+            console.error("❌ Error en loadTiendaSelector:", error);
+            showAdminToast('❌ Error cargando tiendas: ' + error.message, 'error');
+            document.getElementById('tiendaSelect').innerHTML = '<option value="">❌ Error cargando tiendas</option>';
+        }
+    }
+    
+    function updateStoreName() { 
+        const select = document.getElementById('tiendaSelect');
+        if (!select || !select.options || select.options.length === 0) return;
+        const selectedOption = select.options[select.selectedIndex];
+        const name = selectedOption ? selectedOption.text : 'Tienda';
+        document.getElementById('currentStoreName').innerText = name; 
+        document.getElementById('currentStoreNameOrders').innerText = name; 
+    }
+    
+    function toggleSidebar() { 
+        document.getElementById('sidebar').classList.toggle('active'); 
+    }
+    
+    async function login(e) { 
+        e.preventDefault(); 
+        const password = document.getElementById('passInput').value;
+        try {
+            const res = await fetch('/api/admin/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: password })
+            });
+            const data = await res.json();
+            if (data.success) { 
+                ADMIN_PASS = password;
+                localStorage.setItem('adminAuth', 'true');
+                localStorage.setItem('adminPass', password);
+                await checkAuth(); 
+            } else {
+                alert('Contraseña incorrecta'); 
+            }
+        } catch(e) {
+            alert('Error de conexión');
+        }
+    }
+    
+    function logout() { 
+        localStorage.removeItem('adminAuth');
+        localStorage.removeItem('adminPass');
+        ADMIN_PASS = "";
+        if (orderCheckInterval) clearInterval(orderCheckInterval);
+        location.reload(); 
+    }
+    
+    async function checkAuth() { 
+        const storedAuth = localStorage.getItem('adminAuth');
+        const storedPass = localStorage.getItem('adminPass');
+        if (storedAuth === 'true' && storedPass) {
+            ADMIN_PASS = storedPass;
+            document.getElementById('loginScreen').style.display = 'none'; 
+            document.getElementById('app').style.display = 'block'; 
+            await loadTiendaSelector();
+            updateStoreName(); 
+            await loadCategorias(); 
+            await loadProducts();
+            await loadOrders();
+            startOrderPolling();
+        } 
+    }
+    
+    document.getElementById('tiendaSelect').addEventListener('change', async () => { 
+        updateStoreName(); 
+        await loadCategorias(); 
+        const s = document.querySelector('.nav-item.active')?.dataset.section; 
+        if(s === 'products') await loadProducts(); 
+        if(s === 'orders') await loadOrders(); 
+    });
+    
+    function showSection(s) { 
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active')); 
+        document.querySelector(`[data-section="${s}"]`).classList.add('active'); 
+        document.querySelectorAll('[id^="view-"]').forEach(v => v.style.display = 'none'); 
+        document.getElementById(`view-${s}`).style.display = 'block'; 
+        if(s === 'products') loadProducts(); 
+        if(s === 'orders') {
+            loadOrders(); 
+            document.getElementById('newOrderIndicator').classList.remove('active');
+        }
+        if(s === 'stores') loadStores(); 
+        if(s === 'settings') loadCurrencyConfig(); 
+        if(window.innerWidth < 768) document.getElementById('sidebar').classList.remove('active'); 
+    }
+    
+    function startOrderPolling() {
+        checkForNewOrders();
+        orderCheckInterval = setInterval(checkForNewOrders, 8000);
+    }
+    
+    async function checkForNewOrders() {
+        if (!ADMIN_PASS) return;
+        const currentSection = document.querySelector('.nav-item.active')?.dataset.section;
+        if (currentSection === 'orders') return;
+        try {
+            const t = document.getElementById('tiendaSelect').value;
+            if (!t) return;
+            const r = await authFetch(`/api/admin/pedidos?tienda=${t}`);
+            const orders = await r.json();
+            const currentCount = orders.length;
+            if (currentCount > lastOrderCount && lastOrderCount > 0) {
+                const newOrders = currentCount - lastOrderCount;
+                document.getElementById('newOrderIndicator').classList.add('active');
+                showAdminToast(`🔔 ¡${newOrders} nuevo${newOrders > 1 ? 's' : ''} pedido${newOrders > 1 ? 's' : ''} recibido${newOrders > 1 ? 's' : ''}!`, 'success');
+            }
+            lastOrderCount = currentCount;
+        } catch(e) {
+            console.error('Error verificando pedidos:', e);
+        }
+    }
+    
+    // ===========================================
+    // GESTIÓN DE TIENDAS
+    // ===========================================
+    
+    function resetStoreForm() {
+        document.getElementById('storeForm').reset();
+        document.getElementById('storeId').value = '';
+        document.getElementById('storeSubmitText').innerText = 'Crear Tienda';
+        document.getElementById('storeEnvioDisponible').value = 'true';
+        document.getElementById('storeEnvioCosto').value = '0';
+        document.getElementById('storeEnvioTiempo').value = '24-48 horas';
+        document.getElementById('storeGarantiaDisponible').value = 'true';
+        document.getElementById('storeGarantiaDuracion').value = '12 meses';
+        document.getElementById('storeGarantiaDesc').value = 'Garantía contra defectos';
+        document.getElementById('pagoEfectivo').checked = true;
+        document.getElementById('pagoTransferencia').checked = true;
+        document.getElementById('storeTelefono').value = '+53 5XXXXXXX';
+        document.getElementById('storeEmail').value = 'contacto@tienda.com';
+        document.getElementById('storeNumeroTarjeta').value = '';
+        document.getElementById('storeWhatsAppConfirmacion').value = '';
+    }
+    
+    function getConfigFromForm() {
+        const metodos = [];
+        if (document.getElementById('pagoEfectivo').checked) metodos.push('Efectivo');
+        if (document.getElementById('pagoTransferencia').checked) metodos.push('Transferencia');
+        return {
+            envio: {
+                disponible: document.getElementById('storeEnvioDisponible').value === 'true',
+                costo: Number(document.getElementById('storeEnvioCosto').value),
+                tiempo_estimado: document.getElementById('storeEnvioTiempo').value
+            },
+            garantia: {
+                disponible: document.getElementById('storeGarantiaDisponible').value === 'true',
+                duracion: document.getElementById('storeGarantiaDuracion').value,
+                descripcion: document.getElementById('storeGarantiaDesc').value
+            },
+            metodos_pago: metodos,
+            datos_bancarios: {
+                numero_tarjeta: document.getElementById('storeNumeroTarjeta').value.trim(),
+                whatsapp_confirmacion: document.getElementById('storeWhatsAppConfirmacion').value.trim()
+            },
+            contacto: {
+                telefono: document.getElementById('storeTelefono').value,
+                email: document.getElementById('storeEmail').value
+            }
+        };
+    }
+    
+    function setConfigToForm(config) {
+        if (!config) return;
+        document.getElementById('storeEnvioDisponible').value = config.envio?.disponible ? 'true' : 'false';
+        document.getElementById('storeEnvioCosto').value = config.envio?.costo || 0;
+        document.getElementById('storeEnvioTiempo').value = config.envio?.tiempo_estimado || '24-48 horas';
+        document.getElementById('storeGarantiaDisponible').value = config.garantia?.disponible ? 'true' : 'false';
+        document.getElementById('storeGarantiaDuracion').value = config.garantia?.duracion || '12 meses';
+        document.getElementById('storeGarantiaDesc').value = config.garantia?.descripcion || '';
+        document.getElementById('pagoEfectivo').checked = config.metodos_pago?.includes('Efectivo') || false;
+        document.getElementById('pagoTransferencia').checked = config.metodos_pago?.includes('Transferencia') || false;
+        document.getElementById('storeTelefono').value = config.contacto?.telefono || '';
+        document.getElementById('storeEmail').value = config.contacto?.email || '';
+        document.getElementById('storeNumeroTarjeta').value = config.datos_bancarios?.numero_tarjeta || '';
+        document.getElementById('storeWhatsAppConfirmacion').value = config.datos_bancarios?.whatsapp_confirmacion || '';
+    }
+    
+    async function loadStores() {
+        try {
+            const res = await authFetch('/api/admin/tiendas');
+            const stores = await res.json();
+            const tbody = document.getElementById('storesList');
+            if (!stores.length) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No hay tiendas registradas</td></tr>';
+                return;
+            }
+            tbody.innerHTML = stores.map(s => `
+                <tr>
+                    <td><code>${s.id}</code></td>
+                    <td style="font-size:1.5rem;">${s.icono || '🛒'}</td>
+                    <td><strong>${s.nombre}</strong></td>
+                    <td>${s.descripcion?.substring(0, 50) || '-'}${s.descripcion?.length > 50 ? '...' : ''}</td>
+                    <td>${(s.categorias || []).slice(0, 3).join(', ')}${(s.categorias || []).length > 3 ? '...' : ''}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editStore('${s.id}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteStore('${s.id}')"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch(e) {
+            console.error('Error loading stores:', e);
+        }
+    }
+
+    async function editStore(slug) {
+        try {
+            const res = await authFetch(`/api/admin/tiendas/${slug}`);
+            const store = await res.json();
+            document.getElementById('storeId').value = store.id;
+            document.getElementById('storeSlug').value = store.id;
+            document.getElementById('storeDisplayName').value = store.nombre;
+            document.getElementById('storeIcon').value = store.icono || '🛒';
+            document.getElementById('storeDescription').value = store.descripcion || '';
+            document.getElementById('storeCategories').value = (store.categorias || []).join(', ');
+            document.getElementById('storeSubmitText').innerText = 'Actualizar Tienda';
+            setConfigToForm(store.configuracion);
+            document.querySelector('.store-form-card').scrollIntoView({ behavior: 'smooth' });
+        } catch(e) {
+            showAdminToast('Error cargando tienda', 'error');
+        }
+    }
+
+    async function saveStore(e) {
+        e.preventDefault();
+        const id = document.getElementById('storeId').value;
+        const slug = document.getElementById('storeSlug').value.trim().toLowerCase();
+        const nombre = document.getElementById('storeDisplayName').value.trim();
+        const icono = document.getElementById('storeIcon').value.trim() || '🛒';
+        const descripcion = document.getElementById('storeDescription').value.trim();
+        const categorias = document.getElementById('storeCategories').value.split(',').map(c => c.trim()).filter(c => c);
+        const configuracion = getConfigFromForm();
+        if (!slug || !nombre) {
+            alert('Completa ID y Nombre');
+            return;
+        }
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/api/admin/tiendas/${id}` : `/api/admin/tiendas`;
+        try {
+            const res = await authFetch(url, {
+                method: method,
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ id: slug, nombre, icono, descripcion, categorias, configuracion })
+            });
+            if (res.ok) {
+                resetStoreForm();
+                await loadTiendaSelector();
+                loadStores();
+                showAdminToast(id ? '✅ Tienda actualizada' : '✅ Tienda creada exitosamente', 'success');
+            } else {
+                const error = await res.json();
+                showAdminToast('❌ ' + (error.error || 'Error al guardar'), 'error');
+            }
+        } catch(e) {
+            showAdminToast('❌ Error de conexión', 'error');
+        }
+    }
+
+    async function deleteStore(slug) {
+        if (!confirm(`¿Eliminar tienda "${slug}"? Se borrarán todos sus productos y pedidos.`)) return;
+        try {
+            await authFetch(`/api/admin/tiendas/${slug}`, { method: 'DELETE' });
+            await loadTiendaSelector();
+            loadStores();
+            showAdminToast('🗑️ Tienda eliminada', 'success');
+            if (document.getElementById('tiendaSelect').value === slug) location.reload();
+        } catch(e) {
+            showAdminToast('❌ Error al eliminar', 'error');
+        }
+    }
+    
+    async function loadCategorias() { 
+        const t = document.getElementById('tiendaSelect').value; 
+        if (!t) return;
+        try {
+            const r = await authFetch(`/api/admin/categorias?tienda=${t}`); 
+            categoriasActuales = await r.json(); 
+            updateCategoriaSelect(); 
+        } catch(e) {
+            console.error('Error cargando categorías:', e);
+        }
+    }
+    
+    function updateCategoriaSelect() { 
+        const s = document.getElementById('prodCategory'); 
+        if (categoriasActuales.length) {
+            s.innerHTML = categoriasActuales.map(c => `<option value="${c}">${c}</option>`).join(''); 
+        } else {
+            s.innerHTML = '<option value="otros">otros</option>';
+        }
+    }
+    
+    async function quickAddCategory() { 
+        const n = prompt('Nombre de la nueva categoría:'); 
+        if(n) { 
+            const t = document.getElementById('tiendaSelect').value; 
+            try {
+                await authFetch(`/api/admin/categorias`, { 
+                    method:'POST', 
+                    headers:{'Content-Type':'application/json'}, 
+                    body:JSON.stringify({ tienda:t, categoria:n.toLowerCase() }) 
+                }); 
+                await loadCategorias(); 
+                updateCategoriaSelect(); 
+                showAdminToast(`✅ Categoría "${n}" agregada`, 'success');
+            } catch(e) {
+                showAdminToast('❌ Error al agregar categoría', 'error');
+            }
+        } 
+    }
+    
+    async function loadProducts() { 
+        const t = document.getElementById('tiendaSelect').value; 
+        if (!t) {
+            console.log("No hay tienda seleccionada para cargar productos");
+            return;
+        }
+        try {
+            console.log(`Cargando productos para tienda: ${t}`);
+            const r = await authFetch(`/api/admin/productos?tienda=${t}`); 
+            const p = await r.json(); 
+            console.log(`Productos recibidos: ${p.length}`);
+            if (!p.length) {
+                document.getElementById('productsList').innerHTML = '<tr><td colspan="8" class="text-center py-4">No hay productos registrados</td></tr>';
+                return;
+            }
+            document.getElementById('productsList').innerHTML = p.map(x => `
+                <tr>
+                    <td><img src="${x.imagen}" style="width:45px;height:45px;border-radius:10px;object-fit:cover;" onerror="this.src='https://via.placeholder.com/45'"></td>
+                    <td class="fw-semibold">${x.nombre}</td>
+                    <td>$${x.precio}</td>
+                    <td>${x.descuento||0}%</td>
+                    <td><span class="badge bg-light text-dark">${x.categoria}</span></td>
+                    <td>${x.tamanio==='grande'?'📏 Grande':'📐 Pequeño'}</td>
+                    <td>${x.disponible?'<span class="badge bg-success">Disponible</span>':'<span class="badge bg-danger">Agotado</span>'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editProduct(${x.id})"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(${x.id})"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join(''); 
+        } catch(e) {
+            console.error('Error loading products:', e);
+            showAdminToast('Error cargando productos: ' + e.message, 'error');
+        }
+    }
+    
+    function openProductModal() { 
+        document.getElementById('productFormData').reset(); 
+        document.getElementById('productId').value = ''; 
+        document.getElementById('prodSize').value = 'pequeno';
+        updateCategoriaSelect();
+        productModal = new bootstrap.Modal(document.getElementById('productModal')); 
+        productModal.show(); 
+    }
+    
+    async function editProduct(id) { 
+        const t = document.getElementById('tiendaSelect').value; 
+        try {
+            const r = await authFetch(`/api/admin/productos?tienda=${t}`); 
+            const p = (await r.json()).find(x => x.id == id); 
+            if(p) { 
+                document.getElementById('productId').value = p.id; 
+                document.getElementById('prodName').value = p.nombre; 
+                document.getElementById('prodDescription').value = p.descripcion || ''; 
+                document.getElementById('prodPrice').value = p.precio; 
+                document.getElementById('prodDiscount').value = p.descuento || 0; 
+                document.getElementById('prodSize').value = p.tamanio || 'pequeno'; 
+                document.getElementById('prodStock').value = p.disponible.toString(); 
+                document.getElementById('prodImage').value = p.imagen || ''; 
+                updateCategoriaSelect(); 
+                document.getElementById('prodCategory').value = p.categoria; 
+                productModal = new bootstrap.Modal(document.getElementById('productModal')); 
+                productModal.show(); 
+            } 
+        } catch(e) {
+            showAdminToast('Error cargando producto', 'error');
+        }
+    }
+    
+    async function saveProduct() { 
+        console.log("=== FUNCIÓN saveProduct EJECUTADA ===");
+        
+        const id = document.getElementById('productId').value; 
+        const t = document.getElementById('tiendaSelect').value; 
+        
+        if (!t) {
+            showAdminToast('❌ No hay tienda seleccionada', 'error');
+            return;
+        }
+        
+        const nombre = document.getElementById('prodName').value;
+        const precio = document.getElementById('prodPrice').value;
+        
+        if (!nombre || !precio) {
+            showAdminToast('❌ Nombre y precio son obligatorios', 'error');
+            return;
+        }
+        
+        console.log("Tienda:", t);
+        console.log("Nombre:", nombre);
+        console.log("Precio:", precio);
+        
+        const f = new FormData(); 
+        f.append('tienda', t); 
+        f.append('nombre', nombre); 
+        f.append('descripcion', document.getElementById('prodDescription').value); 
+        f.append('precio', precio); 
+        f.append('descuento', document.getElementById('prodDiscount').value || 0); 
+        f.append('tamanio', document.getElementById('prodSize').value); 
+        f.append('categoria', document.getElementById('prodCategory').value); 
+        f.append('disponible', document.getElementById('prodStock').value); 
+        f.append('imagen_url', document.getElementById('prodImage').value); 
+        
+        const file = document.getElementById('prodFile').files[0]; 
+        if(file) {
+            f.append('imagen', file);
+            console.log("Archivo:", file.name);
+        }
+        
+        const url = id ? `/api/admin/productos/${id}` : `/api/admin/productos`;
+        console.log("URL:", url);
+        
+        try {
+            const response = await authFetch(url, { method: id ? 'PUT' : 'POST', body: f });
+            const result = await response.json();
+            console.log("Respuesta:", result);
+            
+            if (response.ok && result.success) {
+                if (productModal) productModal.hide(); 
+                await loadProducts(); 
+                showAdminToast(id ? '✅ Producto actualizado' : '✅ Producto creado', 'success');
+                document.getElementById('prodFile').value = '';
+            } else {
+                console.error('Error del servidor:', result);
+                showAdminToast('❌ Error: ' + (result.error || 'No se pudo guardar el producto'), 'error');
+            }
+        } catch(e) {
+            console.error('Error en saveProduct:', e);
+            showAdminToast('❌ Error de conexión: ' + e.message, 'error');
+        }
+    }
+    
+    async function deleteProduct(id) { 
+        if(confirm('¿Eliminar este producto?')) { 
+            const t = document.getElementById('tiendaSelect').value; 
+            try {
+                await authFetch(`/api/admin/productos/${id}?tienda=${t}`, { method:'DELETE' }); 
+                await loadProducts(); 
+                showAdminToast('🗑️ Producto eliminado', 'success');
+            } catch(e) {
+                showAdminToast('❌ Error al eliminar', 'error');
+            }
+        } 
+    }
+    
+    async function loadOrders() { 
+        const t = document.getElementById('tiendaSelect').value; 
+        if (!t) {
+            console.log("No hay tienda seleccionada para cargar pedidos");
+            return;
+        }
+        try {
+            console.log(`Cargando pedidos para tienda: ${t}`);
+            const r = await authFetch(`/api/admin/pedidos?tienda=${t}`); 
+            const o = await r.json(); 
+            console.log(`Pedidos recibidos: ${o.length}`);
+            lastOrderCount = o.length;
+            document.getElementById('orderCount').innerText = `${o.length} pedidos`; 
+            const c = document.getElementById('ordersList'); 
+            if(!o.length) { 
+                c.innerHTML = '<div class="alert alert-info text-center py-4">No hay pedidos registrados</div>'; 
+                return; 
+            }
+            c.innerHTML = o.map(p => {
+                const tiendaInfo = tiendasDisponibles.find(ti => ti.id === p.tienda);
+                const telefonoTienda = tiendaInfo?.configuracion?.contacto?.telefono || '+53 5XXXXXXX';
+                return `
+                <div class="card order-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div>
+                                <h5>Pedido #${p.id}</h5>
+                                <small class="text-muted">${new Date(p.created_at).toLocaleString()}</small>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                ${p.codigo_cliente ? `<span class="codigo-cliente-badge"><i class="fas fa-qrcode"></i> ${p.codigo_cliente}</span>` : ''}
+                                <span class="badge-status bg-${p.estado==='pendiente'?'warning':p.estado==='confirmado'?'info':p.estado==='enviado'?'primary':'success'}">${p.estado}</span>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row mb-3">
+                            <div class="col-md-4"><i class="fas fa-user text-primary"></i> ${p.nombre}</div>
+                            <div class="col-md-4"><i class="fas fa-phone text-primary"></i> ${p.telefono}</div>
+                            <div class="col-md-4"><i class="fas fa-map-marker-alt text-primary"></i> ${p.direccion}</div>
+                        </div>
+                        <div class="bg-light p-3 rounded">
+                            ${(p.items || []).map(i => `
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span><img src="${i.imagen}" style="width:30px;height:30px;border-radius:6px;" onerror="this.src='https://via.placeholder.com/30'"> ${i.qty}x ${i.nombre}</span>
+                                    <span class="fw-semibold">$${((i.precio||0)*(i.qty)).toFixed(2)}</span>
+                                </div>
+                            `).join('')}
+                            <hr>
+                            <div class="d-flex justify-content-between fw-bold"><span>Total</span><span>$${p.total.toFixed(2)} ${p.moneda||'CUP'}</span></div>
+                        </div>
+                        <div class="d-flex gap-2 mt-3">
+                            <select class="form-select form-select-sm w-auto" onchange="updateOrderStatus(${p.id}, this.value)">
+                                <option value="pendiente" ${p.estado==='pendiente'?'selected':''}>Pendiente</option>
+                                <option value="confirmado" ${p.estado==='confirmado'?'selected':''}>Confirmado</option>
+                                <option value="enviado" ${p.estado==='enviado'?'selected':''}>Enviado</option>
+                                <option value="entregado" ${p.estado==='entregado'?'selected':''}>Entregado</option>
+                            </select>
+                            <button class="btn btn-whatsapp btn-sm" onclick="notificarWhatsApp('${telefonoTienda}', '${p.nombre}', ${p.id}, '${p.tienda}', '${p.codigo_cliente || ''}')"><i class="fab fa-whatsapp"></i> Notificar</button>
+                            <button class="btn btn-outline-danger btn-sm ms-auto" onclick="deleteSingleOrder(${p.id})"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join(''); 
+        } catch(e) {
+            console.error('Error loading orders:', e);
+            showAdminToast('Error cargando pedidos: ' + e.message, 'error');
+        }
+    }
+    
+    function notificarWhatsApp(telefono, nombre, orderId, tienda, codigoCliente) { 
+        const tiendaInfo = tiendasDisponibles.find(t => t.id === tienda);
+        const tiendaNombre = tiendaInfo ? tiendaInfo.nombre : 'Tienda La Reina';
+        let msg = `Hola ${nombre}, gracias por contactarnos. Usted ha realizado el pedido #${orderId} en ${tiendaNombre}.`;
+        if (codigoCliente) {
+            msg += ` Su código de pedido es: ${codigoCliente}.`;
+        }
+        msg += ` En breve recibirá su domicilio. ¡Gracias por su compra!`;
+        window.open(`https://wa.me/${telefono.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, '_blank'); 
+    }
+    
+    async function updateOrderStatus(id, estado) { 
+        const t = document.getElementById('tiendaSelect').value; 
+        try {
+            await authFetch(`/api/admin/pedidos/${id}`, { 
+                method:'PUT', 
+                headers:{'Content-Type':'application/json'}, 
+                body:JSON.stringify({ tienda:t, estado:estado }) 
+            }); 
+            await loadOrders(); 
+            showAdminToast(`✅ Pedido #${id} actualizado a "${estado}"`, 'success');
+        } catch(e) {
+            showAdminToast('❌ Error al actualizar', 'error');
+        }
+    }
+    
+    async function deleteSingleOrder(id) { 
+        if(confirm('¿Eliminar este pedido?')) { 
+            const t = document.getElementById('tiendaSelect').value; 
+            try {
+                await authFetch(`/api/admin/pedidos/${id}?tienda=${t}`, { method:'DELETE' }); 
+                await loadOrders(); 
+                showAdminToast('🗑️ Pedido eliminado', 'success');
+            } catch(e) {
+                showAdminToast('❌ Error al eliminar', 'error');
+            }
+        } 
+    }
+    
+    async function deleteAllOrders() { 
+        const t = document.getElementById('tiendaSelect').value; 
+        if(confirm('¿Eliminar TODOS los pedidos de esta tienda?')) { 
+            try {
+                await authFetch(`/api/admin/pedidos?tienda=${t}`, { method:'DELETE' }); 
+                await loadOrders(); 
+                showAdminToast('🗑️ Todos los pedidos eliminados', 'success');
+            } catch(e) {
+                showAdminToast('❌ Error al eliminar', 'error');
+            }
+        } 
+    }
+    
+    async function loadCurrencyConfig() { 
+        try {
+            const r = await authFetch('/api/admin/config'); 
+            const c = await r.json(); 
+            document.getElementById('rateUSD').value = (1/c.tasas?.USD || 25).toFixed(2); 
+            document.getElementById('rateEUR').value = (1/c.tasas?.EUR || 27).toFixed(2); 
+        } catch(e) {
+            console.error('Error loading config:', e);
+        }
+    }
+    
+    async function saveCurrencyConfig(e) { 
+        e.preventDefault(); 
+        const u = parseFloat(document.getElementById('rateUSD').value); 
+        const eu = parseFloat(document.getElementById('rateEUR').value); 
+        try {
+            await authFetch('/api/admin/config', { 
+                method:'PUT', 
+                headers:{'Content-Type':'application/json'}, 
+                body:JSON.stringify({ monedaBase:'CUP', tasas:{ CUP:1, USD:1/u, EUR:1/eu } }) 
+            }); 
+            showAdminToast('✅ Configuración guardada', 'success');
+        } catch(e) {
+            showAdminToast('❌ Error al guardar', 'error');
+        }
+    }
+    
+    checkAuth();
+</script>
+</body>
+</html>
