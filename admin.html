@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin / Multi tienda - Tienda La Reina</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #6366f1; --primary-dark: #4f46e5; --success: #10b981; --danger: #ef4444; --bg-body: #f1f5f9; --bg-card: #ffffff; --text-main: #1e293b; --sidebar-bg: #0f172a; --sidebar-text: #94a3b8; --border: #e2e8f0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); font-size: 14px; }
+        .sidebar { width: 280px; background: var(--sidebar-bg); height: 100vh; position: fixed; left: 0; top: 0; padding: 24px 16px; transition: 0.3s; z-index: 1000; display: flex; flex-direction: column; overflow-y: auto; }
+        .main-content { margin-left: 280px; padding: 30px; min-height: 100vh; }
+        .mobile-menu-btn { display: none; position: fixed; top: 20px; left: 20px; z-index: 1100; background: var(--primary); color: white; border: none; padding: 12px 18px; border-radius: 12px; cursor: pointer; }
+        @media (max-width: 768px) { .mobile-menu-btn { display: block; } .sidebar { transform: translateX(-100%); } .sidebar.active { transform: translateX(0); } .main-content { margin-left: 0; padding: 80px 20px 30px; } }
+        .sidebar-brand { display: flex; align-items: center; gap: 12px; padding: 8px 12px; margin-bottom: 32px; color: white; }
+        .sidebar-brand i { font-size: 28px; color: var(--primary); }
+        .sidebar-brand span { font-size: 1.3rem; font-weight: 700; }
+        .nav-item { padding: 12px 16px; border-radius: 12px; color: var(--sidebar-text); cursor: pointer; display: flex; align-items: center; gap: 14px; margin-bottom: 6px; transition: 0.2s; font-weight: 500; }
+        .nav-item:hover, .nav-item.active { background: var(--primary); color: white; }
+        .tienda-selector { background: rgba(255,255,255,0.05); border-radius: 14px; padding: 16px; margin-bottom: 20px; }
+        .tienda-selector label { color: rgba(255,255,255,0.6); font-size: 0.75rem; margin-bottom: 8px; display: block; }
+        .tienda-selector select { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 10px; padding: 10px 12px; width: 100%; }
+        .tienda-selector select option { background: var(--sidebar-bg); }
+        .card { background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .btn-primary { background: var(--primary); border: none; font-weight: 500; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        #loginScreen { position: fixed; inset: 0; background: linear-gradient(135deg, #667eea, #764ba2); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+        .login-card { background: white; padding: 48px 40px; border-radius: 28px; width: 90%; max-width: 420px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+        .table { font-size: 0.9rem; }
+        .table th { font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; padding: 16px 12px; background: #f8fafc; }
+        .table td { padding: 14px 12px; vertical-align: middle; }
+        .order-card { border-left: 4px solid var(--primary); margin-bottom: 20px; }
+        .badge-status { padding: 6px 12px; border-radius: 20px; font-weight: 500; font-size: 0.75rem; }
+        .codigo-cliente-badge { background: #f0f9ff; border: 2px dashed #6366f1; padding: 6px 14px; border-radius: 8px; font-family: monospace; font-weight: 700; font-size: 0.9rem; color: #4f46e5; }
+        .store-form-card { background: linear-gradient(135deg, #667eea10, #764ba210); border-radius: 20px; padding: 24px; margin-bottom: 30px; border: 1px solid var(--border); }
+        .form-label { font-weight: 600; margin-bottom: 8px; }
+        .form-control:focus, .form-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+        .admin-toast { position: fixed; top: 20px; right: 20px; background: white; padding: 16px 24px; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.15); border-left: 5px solid var(--success); display: flex; align-items: center; gap: 14px; z-index: 9999; transform: translateX(120%); transition: transform 0.3s; font-weight: 500; }
+        .admin-toast.show { transform: translateX(0); }
+        .info-box { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 12px 16px; margin-top: 8px; font-size: 0.85rem; color: #0369a1; }
+        hr { margin: 20px 0; border-color: var(--border); }
+        
+        /* Estilos para el selector de países - CORREGIDO */
+        .paises-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        .pais-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 15px;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid var(--border);
+        }
+        .pais-option:hover {
+            background: #e0e7ff;
+            transform: translateX(3px);
+        }
+        .pais-option.selected {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        .pais-option.selected .pais-nombre {
+            color: white;
+        }
+        .pais-option input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+        .pais-option .pais-bandera {
+            font-size: 1.3rem;
+        }
+        .pais-option .pais-nombre {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-main);
+            flex: 1;
+        }
+        .pais-option .pais-codigo {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: monospace;
+        }
+        .pais-option.selected .pais-codigo {
+            color: rgba(255,255,255,0.8);
+        }
+        
+        .product-img-preview { width: 45px; height: 45px; border-radius: 10px; object-fit: cover; }
+    </style>
+</head>
+<body>
+
+<button class="mobile-menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i> Menú</button>
+
+<div id="loginScreen">
+    <div class="login-card">
+        <i class="fas fa-crown" style="font-size: 48px; color: var(--primary); margin-bottom: 20px;"></i>
+        <h2>Panel Administrativo</h2>
+        <p class="text-muted mb-4">Multi Tienda La Reina</p>
+        <form onsubmit="login(event)">
+            <div class="mb-3"><input type="password" id="passInput" class="form-control" placeholder="Contraseña" required></div>
+            <button class="btn btn-primary w-100">Ingresar</button>
+        </form>
+    </div>
+</div>
+
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><i class="fas fa-store"></i><span>Multi Tienda</span></div>
+    <div class="tienda-selector">
+        <label><i class="fas fa-shop"></i> TIENDA ACTIVA</label>
+        <select id="tiendaSelect" class="form-select"></select>
+    </div>
+    <div class="nav-item active" data-section="products" onclick="showSection('products')"><i class="fas fa-box"></i> Productos</div>
+    <div class="nav-item" data-section="orders" onclick="showSection('orders')"><i class="fas fa-shopping-cart"></i> Pedidos</div>
+    <div class="nav-item" data-section="stores" onclick="showSection('stores')"><i class="fas fa-store-alt"></i> Tiendas</div>
+    <div class="nav-item" data-section="settings" onclick="showSection('settings')"><i class="fas fa-cog"></i> Configuración</div>
+    <div style="flex:1;"></div>
+    <div class="nav-item text-danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Salir</div>
+</div>
+
+<div class="main-content" id="app" style="display:none;">
+    
+    <!-- PRODUCTOS -->
+    <div id="view-products">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3><i class="fas fa-box me-2" style="color:var(--primary);"></i>Productos - <span id="currentStoreName">Cargando...</span></h3>
+            <button class="btn btn-primary" onclick="openProductModal()"><i class="fas fa-plus"></i> Nuevo Producto</button>
+        </div>
+        <div class="card p-3">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead><tr><th>Img</th><th>Nombre</th><th>Precio</th><th>Desc.</th><th>Categoría</th><th>Tamaño</th><th>Estado</th><th>Acciones</th></tr></thead>
+                    <tbody id="productsList"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- PEDIDOS -->
+    <div id="view-orders" style="display:none;">
+        <div class="d-flex justify-content-between mb-4">
+            <h3><i class="fas fa-shopping-cart me-2" style="color:var(--primary);"></i>Pedidos - <span id="currentStoreNameOrders">Cargando...</span></h3>
+            <button class="btn btn-outline-danger" onclick="deleteAllOrders()"><i class="fas fa-trash"></i> Limpiar Todo</button>
+        </div>
+        <div id="ordersList"></div>
+    </div>
+    
+    <!-- TIENDAS -->
+    <div id="view-stores" style="display:none;">
+        <h3 class="mb-4"><i class="fas fa-store-alt me-2" style="color:var(--primary);"></i>Gestión de Tiendas</h3>
+        
+        <div class="store-form-card">
+            <h5 class="mb-3"><i class="fas fa-plus-circle"></i> Agregar / Editar Tienda</h5>
+            <form id="storeForm" onsubmit="saveStore(event)">
+                <input type="hidden" id="storeId">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">ID de Tienda (slug) *</label>
+                        <input type="text" id="storeSlug" class="form-control" placeholder="ej. electro" required>
+                        <small class="text-muted">Solo letras minúsculas, números y guiones</small>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Nombre Comercial *</label>
+                        <input type="text" id="storeDisplayName" class="form-control" placeholder="Electrodomésticos" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Icono (Emoji)</label>
+                        <input type="text" id="storeIcon" class="form-control" placeholder="⚡" value="⚡">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Descripción</label>
+                        <textarea id="storeDescription" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Categorías Iniciales</label>
+                        <input type="text" id="storeCategories" class="form-control" placeholder="refrigeradores, lavadoras, otros" value="otros">
+                    </div>
+                    
+                    <!-- PAÍSES HABILITADOS - CORREGIDO -->
+                    <div class="col-12 mt-3">
+                        <hr>
+                        <h6 class="mb-2"><i class="fas fa-globe"></i> Países Habilitados para Compra</h6>
+                        <div class="info-box mb-2">
+                            <i class="fas fa-info-circle"></i> Seleccione los países cuyos códigos telefónicos estarán disponibles en el formulario de compra del cliente.
+                        </div>
+                        <div id="paisesContainer" class="paises-grid"></div>
+                        <input type="hidden" id="storePaisesActivos" value='["53"]'>
+                        <small class="text-muted mt-2 d-block">Seleccione al menos un país. Estos aparecerán en el selector del formulario de compra.</small>
+                    </div>
+                    
+                    <div class="col-12 mt-3"><hr><h6><i class="fas fa-truck"></i> Configuración de Envío</h6></div>
+                    <div class="col-md-4"><label>Envío Disponible</label><select id="storeEnvioDisponible" class="form-select"><option value="true">✅ Sí</option><option value="false">❌ No</option></select></div>
+                    <div class="col-md-4"><label>Costo de Envío (CUP)</label><input type="number" id="storeEnvioCosto" class="form-control" value="0"></div>
+                    <div class="col-md-4"><label>Tiempo Estimado</label><input type="text" id="storeEnvioTiempo" class="form-control" value="24-48 horas"></div>
+                    
+                    <div class="col-12 mt-3"><hr><h6><i class="fas fa-shield-alt"></i> Configuración de Garantía</h6></div>
+                    <div class="col-md-4"><label>Garantía Disponible</label><select id="storeGarantiaDisponible" class="form-select"><option value="true">✅ Sí</option><option value="false">❌ No</option></select></div>
+                    <div class="col-md-4"><label>Duración</label><input type="text" id="storeGarantiaDuracion" class="form-control" value="12 meses"></div>
+                    <div class="col-md-4"><label>Descripción</label><input type="text" id="storeGarantiaDesc" class="form-control" value="Garantía contra defectos de fábrica"></div>
+                    
+                    <div class="col-12 mt-3"><hr><h6><i class="fas fa-credit-card"></i> Métodos de Pago</h6></div>
+                    <div class="col-md-6">
+                        <label class="form-check me-3"><input type="checkbox" id="pagoEfectivo" class="form-check-input" checked> <span class="form-check-label">Efectivo</span></label>
+                        <label class="form-check"><input type="checkbox" id="pagoTransferencia" class="form-check-input" checked> <span class="form-check-label">Transferencia</span></label>
+                    </div>
+                    
+                    <div class="col-12 mt-3"><hr><h6><i class="fas fa-address-card"></i> Datos de Contacto</h6></div>
+                    <div class="col-md-6"><label>Teléfono de Contacto</label><input type="text" id="storeTelefono" class="form-control" value="+53 5XXXXXXX"></div>
+                    <div class="col-md-6"><label>Email de Contacto</label><input type="email" id="storeEmail" class="form-control" value="contacto@tienda.com"></div>
+                    
+                    <div class="col-12 mt-3"><hr><h6><i class="fas fa-university"></i> Datos Bancarios para Transferencia</h6></div>
+                    <div class="col-md-6"><label>Número de Tarjeta</label><input type="text" id="storeNumeroTarjeta" class="form-control" placeholder="1234 5678 9012 3456"></div>
+                    <div class="col-md-6"><label>WhatsApp para Comprobante</label><input type="text" id="storeWhatsAppConfirmacion" class="form-control" placeholder="+53 5XXXXXXX"></div>
+                    
+                    <div class="col-12 mt-4">
+                        <button type="submit" class="btn btn-primary px-4"><i class="fas fa-save"></i> <span id="storeSubmitText">Crear Tienda</span></button>
+                        <button type="button" class="btn btn-outline-secondary ms-2" onclick="resetStoreForm()"><i class="fas fa-times"></i> Cancelar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <div class="card p-3 mt-4">
+            <h5 class="mb-3"><i class="fas fa-list-ul"></i> Tiendas Registradas</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead><tr><th>ID</th><th>Icono</th><th>Nombre</th><th>Países Habilitados</th><th>Acciones</th></tr></thead>
+                    <tbody id="storesList"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- CONFIGURACIÓN -->
+    <div id="view-settings" style="display:none;">
+        <h3 class="mb-4"><i class="fas fa-cog me-2" style="color:var(--primary);"></i>Configuración Global</h3>
+        <div class="card p-4" style="max-width:500px;">
+            <h5 class="mb-3"><i class="fas fa-exchange-alt"></i> Tasas de Cambio</h5>
+            <form onsubmit="saveCurrencyConfig(event)">
+                <div class="mb-3"><label>1 USD equivale a (CUP):</label><input type="number" step="0.01" id="rateUSD" class="form-control" required></div>
+                <div class="mb-3"><label>1 EUR equivale a (CUP):</label><input type="number" step="0.01" id="rateEUR" class="form-control" required></div>
+                <button class="btn btn-primary w-100"><i class="fas fa-save"></i> Guardar Configuración</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL PRODUCTO -->
+<div class="modal fade" id="productModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title"><i class="fas fa-box"></i> Producto</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <form id="productFormData">
+                    <input type="hidden" id="productId">
+                    <div class="mb-3"><label class="form-label">Nombre *</label><input type="text" id="prodName" class="form-control" required></div>
+                    <div class="mb-3"><label class="form-label">Descripción</label><textarea id="prodDescription" class="form-control" rows="3"></textarea></div>
+                    <div class="row"><div class="col-md-6 mb-3"><label class="form-label">Precio (CUP) *</label><input type="number" id="prodPrice" class="form-control" required step="0.01"></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">Descuento (%)</label><input type="number" id="prodDiscount" class="form-control" value="0" min="0" max="100"></div></div>
+                    <div class="row"><div class="col-md-6 mb-3"><label class="form-label">Categoría</label><div class="input-group"><select id="prodCategory" class="form-select"></select><button type="button" class="btn btn-outline-primary" onclick="quickAddCategory()"><i class="fas fa-plus"></i></button></div></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">Tamaño</label><select id="prodSize" class="form-select"><option value="pequeno">📐 Pequeño</option><option value="grande">📏 Grande</option></select></div></div>
+                    <div class="mb-3"><label class="form-label">Estado</label><select id="prodStock" class="form-select"><option value="true">✅ Disponible</option><option value="false">❌ Agotado</option></select></div>
+                    <div class="mb-3"><label class="form-label">URL de Imagen</label><input type="text" id="prodImage" class="form-control" placeholder="https://..."></div>
+                    <div class="mb-3"><label class="form-label">Subir imagen</label><input type="file" id="prodFile" class="form-control" accept="image/*"></div>
+                </form>
+            </div>
+            <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button class="btn btn-primary" onclick="saveProduct()">Guardar Producto</button></div>
+        </div>
+    </div>
+</div>
+
+<div class="admin-toast" id="adminToast"><i class="fas fa-bell"></i><span id="adminToastMsg"></span></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // ============================================
+    // ADMIN PANEL - VERSIÓN CORREGIDA
+    // ============================================
+    
+    let ADMIN_PASS = "";
+    let productModal = null;
+    let categoriasActuales = [];
+    let tiendasDisponibles = [];
+    
+    // Lista completa de países (ordenada alfabéticamente)
+    const PAISES_COMPLETOS = [
+        { codigo: '54', nombre: 'Argentina', bandera: '🇦🇷', digitos: 10, ejemplo: '9112345678' },
+        { codigo: '591', nombre: 'Bolivia', bandera: '🇧🇴', digitos: 8, ejemplo: '71234567' },
+        { codigo: '56', nombre: 'Chile', bandera: '🇨🇱', digitos: 9, ejemplo: '912345678' },
+        { codigo: '57', nombre: 'Colombia', bandera: '🇨🇴', digitos: 10, ejemplo: '3123456789' },
+        { codigo: '506', nombre: 'Costa Rica', bandera: '🇨🇷', digitos: 8, ejemplo: '61234567' },
+        { codigo: '53', nombre: 'Cuba', bandera: '🇨🇺', digitos: 8, ejemplo: '5XXXXXXX' },
+        { codigo: '593', nombre: 'Ecuador', bandera: '🇪🇨', digitos: 9, ejemplo: '991234567' },
+        { codigo: '503', nombre: 'El Salvador', bandera: '🇸🇻', digitos: 8, ejemplo: '71234567' },
+        { codigo: '34', nombre: 'España', bandera: '🇪🇸', digitos: 9, ejemplo: '612345678' },
+        { codigo: '1', nombre: 'Estados Unidos', bandera: '🇺🇸', digitos: 10, ejemplo: '2125551234' },
+        { codigo: '504', nombre: 'Honduras', bandera: '🇭🇳', digitos: 8, ejemplo: '91234567' },
+        { codigo: '52', nombre: 'México', bandera: '🇲🇽', digitos: 10, ejemplo: '5512345678' },
+        { codigo: '505', nombre: 'Nicaragua', bandera: '🇳🇮', digitos: 8, ejemplo: '81234567' },
+        { codigo: '507', nombre: 'Panamá', bandera: '🇵🇦', digitos: 8, ejemplo: '61234567' },
+        { codigo: '595', nombre: 'Paraguay', bandera: '🇵🇾', digitos: 9, ejemplo: '981234567' },
+        { codigo: '51', nombre: 'Perú', bandera: '🇵🇪', digitos: 9, ejemplo: '912345678' },
+        { codigo: '598', nombre: 'Uruguay', bandera: '🇺🇾', digitos: 8, ejemplo: '91234567' },
+        { codigo: '58', nombre: 'Venezuela', bandera: '🇻🇪', digitos: 10, ejemplo: '4123456789' }
+    ];
+    
+    function showAdminToast(msg, type = 'success') {
+        const toast = document.getElementById('adminToast');
+        const icon = toast.querySelector('i');
+        toast.style.borderLeftColor = type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#f59e0b';
+        icon.style.color = type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#f59e0b';
+        icon.className = type === 'success' ? 'fas fa-check-circle' : type === 'error' ? 'fas fa-exclamation-circle' : 'fas fa-info-circle';
+        document.getElementById('adminToastMsg').innerText = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+    
+    async function authFetch(url, options = {}) {
+        if (!ADMIN_PASS) throw new Error('No autenticado');
+        const sep = url.includes('?') ? '&' : '?';
+        const res = await fetch(`${url}${sep}password=${encodeURIComponent(ADMIN_PASS)}`, options);
+        if (res.status === 401) { logout(); throw new Error('Sesión expirada'); }
+        return res;
+    }
+    
+    // ============================================
+    // SELECTOR DE PAÍSES - CORREGIDO
+    // ============================================
+    
+    function renderPaisesSelector(paisesActivos = ['53']) {
+        const container = document.getElementById('paisesContainer');
+        if (!container) return;
+        
+        // Ordenar países por nombre alfabéticamente
+        const paisesOrdenados = [...PAISES_COMPLETOS].sort((a, b) => a.nombre.localeCompare(b.nombre));
+        
+        container.innerHTML = paisesOrdenados.map(p => `
+            <div class="pais-option ${paisesActivos.includes(p.codigo) ? 'selected' : ''}" 
+                 onclick="togglePais('${p.codigo}', this)">
+                <input type="checkbox" ${paisesActivos.includes(p.codigo) ? 'checked' : ''} 
+                       value="${p.codigo}" style="pointer-events: none;">
+                <span class="pais-bandera">${p.bandera}</span>
+                <span class="pais-nombre">${p.nombre}</span>
+                <span class="pais-codigo">+${p.codigo}</span>
+            </div>
+        `).join('');
+        
+        updatePaisesInput();
+    }
+    
+    window.togglePais = (codigo, element) => {
+        const checkbox = element.querySelector('input');
+        const isSelected = element.classList.contains('selected');
+        
+        if (isSelected) {
+            element.classList.remove('selected');
+            checkbox.checked = false;
+        } else {
+            element.classList.add('selected');
+            checkbox.checked = true;
+        }
+        
+        updatePaisesInput();
+    };
+    
+    function updatePaisesInput() {
+        const selected = Array.from(document.querySelectorAll('.pais-option.selected')).map(el => {
+            const input = el.querySelector('input');
+            return input ? input.value : null;
+        }).filter(v => v);
+        
+        document.getElementById('storePaisesActivos').value = JSON.stringify(selected);
+        
+        // Mostrar advertencia si no hay países seleccionados
+        const warning = document.getElementById('paisesWarning');
+        if (selected.length === 0) {
+            if (!document.getElementById('paisesWarning')) {
+                const container = document.getElementById('paisesContainer');
+                const warn = document.createElement('div');
+                warn.id = 'paisesWarning';
+                warn.className = 'info-box mt-2';
+                warn.style.background = '#fee2e2';
+                warn.style.color = '#991b1b';
+                warn.style.borderColor = '#fecaca';
+                warn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Debe seleccionar al menos un país para que los clientes puedan comprar.';
+                container.parentNode.insertBefore(warn, container.nextSibling);
+            }
+        } else {
+            const warn = document.getElementById('paisesWarning');
+            if (warn) warn.remove();
+        }
+    }
+    
+    function getPaisesActivosFromForm() {
+        try {
+            const val = document.getElementById('storePaisesActivos').value;
+            const parsed = JSON.parse(val);
+            return Array.isArray(parsed) && parsed.length ? parsed : ['53'];
+        } catch(e) { 
+            return ['53']; 
+        }
+    }
+    
+    // ============================================
+    // FUNCIONES PRINCIPALES
+    // ============================================
+    
+    async function loadTiendaSelector() {
+        try {
+            const res = await authFetch('/api/admin/tiendas');
+            const tiendas = await res.json();
+            const select = document.getElementById('tiendaSelect');
+            if (!tiendas.length) { 
+                select.innerHTML = '<option>⚠️ No hay tiendas - Crea una primero</option>'; 
+                tiendasDisponibles = []; 
+                return; 
+            }
+            tiendasDisponibles = tiendas;
+            select.innerHTML = tiendas.map(t => `<option value="${t.id}">${t.icono || '🛒'} ${t.nombre || t.id}</option>`).join('');
+            if (tiendas.length && !select.value) select.value = tiendas[0].id;
+            updateStoreName();
+        } catch(e) { 
+            showAdminToast('Error cargando tiendas', 'error'); 
+        }
+    }
+    
+    function updateStoreName() {
+        const sel = document.getElementById('tiendaSelect');
+        const name = sel.options[sel.selectedIndex]?.text.replace(/^[^\w]+/, '') || 'Tienda';
+        document.getElementById('currentStoreName').innerText = name;
+        document.getElementById('currentStoreNameOrders').innerText = name;
+    }
+    
+    function toggleSidebar() { 
+        document.getElementById('sidebar').classList.toggle('active'); 
+    }
+    
+    async function login(e) {
+        e.preventDefault();
+        const pwd = document.getElementById('passInput').value;
+        try {
+            const res = await fetch('/api/admin/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: pwd })
+            });
+            const data = await res.json();
+            if (data.success) {
+                ADMIN_PASS = pwd;
+                localStorage.setItem('adminAuth', 'true');
+                localStorage.setItem('adminPass', pwd);
+                await checkAuth();
+            } else {
+                alert('Contraseña incorrecta');
+            }
+        } catch(e) { 
+            alert('Error de conexión'); 
+        }
+    }
+    
+    function logout() { 
+        localStorage.clear(); 
+        ADMIN_PASS = ""; 
+        location.reload(); 
+    }
+    
+    async function checkAuth() {
+        if (localStorage.getItem('adminAuth') === 'true' && localStorage.getItem('adminPass')) {
+            ADMIN_PASS = localStorage.getItem('adminPass');
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            await loadTiendaSelector();
+            await loadCategorias();
+            await loadProducts();
+            await loadOrders();
+            renderPaisesSelector(['53']);
+        }
+    }
+    
+    document.getElementById('tiendaSelect').addEventListener('change', async () => {
+        updateStoreName();
+        await loadCategorias();
+        const active = document.querySelector('.nav-item.active')?.dataset.section;
+        if (active === 'products') await loadProducts();
+        if (active === 'orders') await loadOrders();
+    });
+    
+    function showSection(s) {
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        document.querySelector(`[data-section="${s}"]`).classList.add('active');
+        document.querySelectorAll('[id^="view-"]').forEach(v => v.style.display = 'none');
+        document.getElementById(`view-${s}`).style.display = 'block';
+        if (s === 'products') loadProducts();
+        if (s === 'orders') loadOrders();
+        if (s === 'stores') loadStores();
+        if (s === 'settings') loadCurrencyConfig();
+        if (window.innerWidth < 768) document.getElementById('sidebar').classList.remove('active');
+    }
+    
+    function resetStoreForm() {
+        document.getElementById('storeForm').reset();
+        document.getElementById('storeId').value = '';
+        document.getElementById('storeSubmitText').innerText = 'Crear Tienda';
+        document.getElementById('storeEnvioDisponible').value = 'true';
+        document.getElementById('storeEnvioCosto').value = '0';
+        document.getElementById('storeEnvioTiempo').value = '24-48 horas';
+        document.getElementById('storeGarantiaDisponible').value = 'true';
+        document.getElementById('storeGarantiaDuracion').value = '12 meses';
+        document.getElementById('storeGarantiaDesc').value = 'Garantía contra defectos de fábrica';
+        document.getElementById('pagoEfectivo').checked = true;
+        document.getElementById('pagoTransferencia').checked = true;
+        document.getElementById('storeTelefono').value = '+53 5XXXXXXX';
+        document.getElementById('storeEmail').value = 'contacto@tienda.com';
+        document.getElementById('storeNumeroTarjeta').value = '';
+        document.getElementById('storeWhatsAppConfirmacion').value = '';
+        renderPaisesSelector(['53']);
+    }
+    
+    function getConfigFromForm() {
+        const metodos = [];
+        if (document.getElementById('pagoEfectivo').checked) metodos.push('Efectivo');
+        if (document.getElementById('pagoTransferencia').checked) metodos.push('Transferencia');
+        return {
+            envio: { 
+                disponible: document.getElementById('storeEnvioDisponible').value === 'true', 
+                costo: Number(document.getElementById('storeEnvioCosto').value), 
+                tiempo_estimado: document.getElementById('storeEnvioTiempo').value 
+            },
+            garantia: { 
+                disponible: document.getElementById('storeGarantiaDisponible').value === 'true', 
+                duracion: document.getElementById('storeGarantiaDuracion').value, 
+                descripcion: document.getElementById('storeGarantiaDesc').value 
+            },
+            metodos_pago: metodos,
+            datos_bancarios: { 
+                numero_tarjeta: document.getElementById('storeNumeroTarjeta').value.trim(), 
+                whatsapp_confirmacion: document.getElementById('storeWhatsAppConfirmacion').value.trim() 
+            },
+            contacto: { 
+                telefono: document.getElementById('storeTelefono').value, 
+                email: document.getElementById('storeEmail').value 
+            }
+        };
+    }
+    
+    function setConfigToForm(cfg) {
+        if (!cfg) return;
+        document.getElementById('storeEnvioDisponible').value = cfg.envio?.disponible ? 'true' : 'false';
+        document.getElementById('storeEnvioCosto').value = cfg.envio?.costo || 0;
+        document.getElementById('storeEnvioTiempo').value = cfg.envio?.tiempo_estimado || '24-48 horas';
+        document.getElementById('storeGarantiaDisponible').value = cfg.garantia?.disponible ? 'true' : 'false';
+        document.getElementById('storeGarantiaDuracion').value = cfg.garantia?.duracion || '12 meses';
+        document.getElementById('storeGarantiaDesc').value = cfg.garantia?.descripcion || '';
+        document.getElementById('pagoEfectivo').checked = cfg.metodos_pago?.includes('Efectivo') || false;
+        document.getElementById('pagoTransferencia').checked = cfg.metodos_pago?.includes('Transferencia') || false;
+        document.getElementById('storeTelefono').value = cfg.contacto?.telefono || '';
+        document.getElementById('storeEmail').value = cfg.contacto?.email || '';
+        document.getElementById('storeNumeroTarjeta').value = cfg.datos_bancarios?.numero_tarjeta || '';
+        document.getElementById('storeWhatsAppConfirmacion').value = cfg.datos_bancarios?.whatsapp_confirmacion || '';
+    }
+    
+    async function loadStores() {
+        try {
+            const res = await authFetch('/api/admin/tiendas');
+            const stores = await res.json();
+            const tbody = document.getElementById('storesList');
+            if (!stores.length) { 
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">No hay tiendas registradas</td></tr>'; 
+                return; 
+            }
+            tbody.innerHTML = stores.map(s => `
+                <tr>
+                    <td><code>${s.id}</code></td>
+                    <td style="font-size:1.5rem">${s.icono || '🛒'}</td>
+                    <td><strong>${s.nombre}</strong></td>
+                    <td>${(s.paises_activos || ['53']).map(c => {
+                        const pais = PAISES_COMPLETOS.find(p => p.codigo === c);
+                        return pais ? `${pais.bandera} ${pais.nombre}` : c;
+                    }).join(', ') || '🇨🇺 Cuba'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editStore('${s.id}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteStore('${s.id}')"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch(e) { 
+            showAdminToast('Error cargando tiendas', 'error'); 
+        }
+    }
+    
+    async function editStore(slug) {
+        try {
+            const res = await authFetch(`/api/admin/tiendas/${slug}`);
+            const s = await res.json();
+            document.getElementById('storeId').value = s.id;
+            document.getElementById('storeSlug').value = s.id;
+            document.getElementById('storeDisplayName').value = s.nombre;
+            document.getElementById('storeIcon').value = s.icono || '🛒';
+            document.getElementById('storeDescription').value = s.descripcion || '';
+            document.getElementById('storeCategories').value = (s.categorias || []).join(', ');
+            document.getElementById('storeSubmitText').innerText = 'Actualizar Tienda';
+            setConfigToForm(s.configuracion);
+            const paisesActivos = s.paises_activos || ['53'];
+            renderPaisesSelector(paisesActivos);
+            document.querySelector('.store-form-card').scrollIntoView({ behavior: 'smooth' });
+        } catch(e) { 
+            showAdminToast('Error cargando tienda', 'error'); 
+        }
+    }
+    
+    async function saveStore(e) {
+        e.preventDefault();
+        const id = document.getElementById('storeId').value;
+        const slug = document.getElementById('storeSlug').value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+        const nombre = document.getElementById('storeDisplayName').value.trim();
+        
+        if (!slug || !nombre) { 
+            showAdminToast('Complete ID y Nombre de la tienda', 'error'); 
+            return; 
+        }
+        
+        const paisesActivos = getPaisesActivosFromForm();
+        if (paisesActivos.length === 0) { 
+            showAdminToast('Seleccione al menos un país habilitado', 'error'); 
+            return; 
+        }
+        
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/api/admin/tiendas/${id}` : '/api/admin/tiendas';
+        
+        try {
+            const res = await authFetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    id: slug, 
+                    nombre, 
+                    icono: document.getElementById('storeIcon').value, 
+                    descripcion: document.getElementById('storeDescription').value, 
+                    categorias: document.getElementById('storeCategories').value.split(',').map(c => c.trim()).filter(c => c), 
+                    configuracion: getConfigFromForm(), 
+                    paises_activos: paisesActivos 
+                })
+            });
+            
+            if (res.ok) {
+                resetStoreForm();
+                await loadTiendaSelector();
+                await loadStores();
+                showAdminToast(id ? '✅ Tienda actualizada' : '✅ Tienda creada exitosamente');
+            } else {
+                const error = await res.json();
+                showAdminToast('❌ ' + (error.error || 'Error al guardar'), 'error');
+            }
+        } catch(e) { 
+            showAdminToast('❌ Error de conexión', 'error'); 
+        }
+    }
+    
+    async function deleteStore(slug) {
+        if (!confirm(`¿Eliminar tienda "${slug}"? Se borrarán todos sus productos y pedidos.`)) return;
+        try {
+            await authFetch(`/api/admin/tiendas/${slug}`, { method: 'DELETE' });
+            await loadTiendaSelector();
+            await loadStores();
+            showAdminToast('🗑️ Tienda eliminada');
+            if (document.getElementById('tiendaSelect').value === slug) location.reload();
+        } catch(e) { 
+            showAdminToast('❌ Error al eliminar', 'error'); 
+        }
+    }
+    
+    async function loadCategorias() {
+        const t = document.getElementById('tiendaSelect').value;
+        if (!t) return;
+        try {
+            const res = await authFetch(`/api/admin/categorias?tienda=${t}`);
+            categoriasActuales = await res.json();
+            updateCategoriaSelect();
+        } catch(e) { }
+    }
+    
+    function updateCategoriaSelect() {
+        const s = document.getElementById('prodCategory');
+        s.innerHTML = categoriasActuales.length ? categoriasActuales.map(c => `<option value="${c}">${c}</option>`).join('') : '<option value="otros">otros</option>';
+    }
+    
+    async function quickAddCategory() {
+        const n = prompt('Nombre de la nueva categoría:');
+        if (n) {
+            const t = document.getElementById('tiendaSelect').value;
+            try {
+                await authFetch('/api/admin/categorias', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tienda: t, categoria: n.toLowerCase() })
+                });
+                await loadCategorias();
+                showAdminToast(`✅ Categoría "${n}" agregada`);
+            } catch(e) { 
+                showAdminToast('❌ Error al agregar', 'error'); 
+            }
+        }
+    }
+    
+    async function loadProducts() {
+        const t = document.getElementById('tiendaSelect').value;
+        if (!t) { 
+            document.getElementById('productsList').innerHTML = '<tr><td colspan="8" class="text-center py-4">Selecciona una tienda</td></tr>'; 
+            return; 
+        }
+        try {
+            const res = await authFetch(`/api/admin/productos?tienda=${t}`);
+            const prods = await res.json();
+            if (!prods.length) { 
+                document.getElementById('productsList').innerHTML = '<tr><td colspan="8" class="text-center py-4">No hay productos registrados</td></tr>'; 
+                return; 
+            }
+            document.getElementById('productsList').innerHTML = prods.map(p => `
+                <tr>
+                    <td><img src="${p.imagen || 'https://via.placeholder.com/45'}" class="product-img-preview" onerror="this.src='https://via.placeholder.com/45'"></td>
+                    <td class="fw-semibold">${p.nombre}</td>
+                    <td>$${Number(p.precio).toFixed(2)}</td>
+                    <td>${p.descuento || 0}%</td>
+                    <td><span class="badge bg-light text-dark">${p.categoria || 'otros'}</span></td>
+                    <td>${p.tamanio === 'grande' ? '📏 Grande' : '📐 Pequeño'}</td>
+                    <td>${p.disponible ? '<span class="badge bg-success">Disponible</span>' : '<span class="badge bg-danger">Agotado</span>'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editProduct(${p.id})"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch(e) { 
+            showAdminToast('Error cargando productos', 'error'); 
+        }
+    }
+    
+    function openProductModal() {
+        document.getElementById('productFormData').reset();
+        document.getElementById('productId').value = '';
+        document.getElementById('prodSize').value = 'pequeno';
+        updateCategoriaSelect();
+        productModal = new bootstrap.Modal(document.getElementById('productModal'));
+        productModal.show();
+    }
+    
+    async function editProduct(id) {
+        const t = document.getElementById('tiendaSelect').value;
+        try {
+            const res = await authFetch(`/api/admin/productos?tienda=${t}`);
+            const p = (await res.json()).find(x => x.id == id);
+            if (p) {
+                document.getElementById('productId').value = p.id;
+                document.getElementById('prodName').value = p.nombre;
+                document.getElementById('prodDescription').value = p.descripcion || '';
+                document.getElementById('prodPrice').value = p.precio;
+                document.getElementById('prodDiscount').value = p.descuento || 0;
+                document.getElementById('prodSize').value = p.tamanio || 'pequeno';
+                document.getElementById('prodStock').value = p.disponible.toString();
+                document.getElementById('prodImage').value = p.imagen || '';
+                updateCategoriaSelect();
+                document.getElementById('prodCategory').value = p.categoria || 'otros';
+                productModal = new bootstrap.Modal(document.getElementById('productModal'));
+                productModal.show();
+            }
+        } catch(e) { 
+            showAdminToast('Error cargando producto', 'error'); 
+        }
+    }
+    
+    async function saveProduct() {
+        const id = document.getElementById('productId').value;
+        const t = document.getElementById('tiendaSelect').value;
+        if (!t) { 
+            showAdminToast('❌ No hay tienda seleccionada', 'error'); 
+            return; 
+        }
+        const fd = new FormData();
+        fd.append('tienda', t);
+        fd.append('nombre', document.getElementById('prodName').value);
+        fd.append('descripcion', document.getElementById('prodDescription').value);
+        fd.append('precio', document.getElementById('prodPrice').value);
+        fd.append('descuento', document.getElementById('prodDiscount').value || 0);
+        fd.append('tamanio', document.getElementById('prodSize').value);
+        fd.append('categoria', document.getElementById('prodCategory').value);
+        fd.append('disponible', document.getElementById('prodStock').value);
+        fd.append('imagen_url', document.getElementById('prodImage').value);
+        const file = document.getElementById('prodFile').files[0];
+        if (file) fd.append('imagen', file);
+        const url = id ? `/api/admin/productos/${id}` : '/api/admin/productos';
+        try {
+            const res = await authFetch(url, { method: id ? 'PUT' : 'POST', body: fd });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                if (productModal) productModal.hide();
+                await loadProducts();
+                showAdminToast(id ? '✅ Producto actualizado' : '✅ Producto creado');
+                document.getElementById('prodFile').value = '';
+            } else {
+                showAdminToast('❌ Error al guardar', 'error');
+            }
+        } catch(e) { 
+            showAdminToast('❌ Error de conexión', 'error'); 
+        }
+    }
+    
+    async function deleteProduct(id) {
+        if (!confirm('¿Eliminar este producto?')) return;
+        const t = document.getElementById('tiendaSelect').value;
+        try {
+            await authFetch(`/api/admin/productos/${id}?tienda=${t}`, { method: 'DELETE' });
+            await loadProducts();
+            showAdminToast('🗑️ Producto eliminado');
+        } catch(e) { 
+            showAdminToast('❌ Error al eliminar', 'error'); 
+        }
+    }
+    
+    async function loadOrders() {
+        const t = document.getElementById('tiendaSelect').value;
+        if (!t) { 
+            document.getElementById('ordersList').innerHTML = '<div class="alert alert-info text-center py-4">Selecciona una tienda</div>'; 
+            return; 
+        }
+        try {
+            const res = await authFetch(`/api/admin/pedidos?tienda=${t}`);
+            const orders = await res.json();
+            const container = document.getElementById('ordersList');
+            if (!orders.length) { 
+                container.innerHTML = '<div class="alert alert-info text-center py-4">No hay pedidos registrados</div>'; 
+                return; 
+            }
+            container.innerHTML = orders.map(o => {
+                const estadoClass = o.estado === 'pendiente' ? 'warning' : o.estado === 'confirmado' ? 'info' : o.estado === 'enviado' ? 'primary' : 'success';
+                return `
+                    <div class="card order-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div><h5>Pedido #${o.id}</h5><small class="text-muted">${new Date(o.created_at).toLocaleString()}</small></div>
+                                <div><span class="codigo-cliente-badge"><i class="fas fa-qrcode"></i> ${o.codigo_cliente}</span><span class="badge-status bg-${estadoClass} ms-2">${o.estado}</span></div>
+                            </div>
+                            <hr>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><i class="fas fa-user text-primary"></i> ${o.nombre}</div>
+                                <div class="col-md-4"><i class="fas fa-phone text-primary"></i> ${o.telefono_completo || o.telefono}</div>
+                                <div class="col-md-4"><i class="fas fa-map-marker-alt text-primary"></i> ${o.direccion}</div>
+                            </div>
+                            <div class="bg-light p-3 rounded">
+                                ${(o.items || []).map(i => `<div class="d-flex justify-content-between align-items-center mb-2"><span>${i.qty}x ${i.nombre}</span><span class="fw-semibold">$${((i.precio || 0) * i.qty).toFixed(2)}</span></div>`).join('')}
+                                <hr><div class="d-flex justify-content-between fw-bold"><span>Total</span><span>$${Number(o.total).toFixed(2)} ${o.moneda || 'CUP'}</span></div>
+                            </div>
+                            <div class="d-flex gap-2 mt-3">
+                                <select class="form-select form-select-sm w-auto" onchange="updateOrderStatus(${o.id}, this.value)">
+                                    <option value="pendiente" ${o.estado === 'pendiente' ? 'selected' : ''}>Pendiente</option>
+                                    <option value="confirmado" ${o.estado === 'confirmado' ? 'selected' : ''}>Confirmado</option>
+                                    <option value="enviado" ${o.estado === 'enviado' ? 'selected' : ''}>Enviado</option>
+                                    <option value="entregado" ${o.estado === 'entregado' ? 'selected' : ''}>Entregado</option>
+                                </select>
+                                <button class="btn btn-outline-danger btn-sm ms-auto" onclick="deleteSingleOrder(${o.id})"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } catch(e) { 
+            showAdminToast('Error cargando pedidos', 'error'); 
+        }
+    }
+    
+    async function updateOrderStatus(id, estado) {
+        const t = document.getElementById('tiendaSelect').value;
+        try {
+            await authFetch(`/api/admin/pedidos/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tienda: t, estado: estado })
+            });
+            await loadOrders();
+            showAdminToast(`✅ Pedido #${id} actualizado a "${estado}"`);
+        } catch(e) { 
+            showAdminToast('❌ Error al actualizar', 'error'); 
+        }
+    }
+    
+    async function deleteSingleOrder(id) {
+        if (!confirm('¿Eliminar este pedido?')) return;
+        const t = document.getElementById('tiendaSelect').value;
+        try {
+            await authFetch(`/api/admin/pedidos/${id}?tienda=${t}`, { method: 'DELETE' });
+            await loadOrders();
+            showAdminToast('🗑️ Pedido eliminado');
+        } catch(e) { 
+            showAdminToast('❌ Error al eliminar', 'error'); 
+        }
+    }
+    
+    async function deleteAllOrders() {
+        const t = document.getElementById('tiendaSelect').value;
+        if (!confirm(`¿Eliminar TODOS los pedidos de esta tienda?`)) return;
+        try {
+            await authFetch(`/api/admin/pedidos?tienda=${t}`, { method: 'DELETE' });
+            await loadOrders();
+            showAdminToast('🗑️ Todos los pedidos eliminados');
+        } catch(e) { 
+            showAdminToast('❌ Error al eliminar', 'error'); 
+        }
+    }
+    
+    async function loadCurrencyConfig() {
+        try {
+            const res = await authFetch('/api/admin/config');
+            const c = await res.json();
+            document.getElementById('rateUSD').value = (1 / (c.tasas?.USD || 0.04)).toFixed(2);
+            document.getElementById('rateEUR').value = (1 / (c.tasas?.EUR || 0.037)).toFixed(2);
+        } catch(e) { 
+            document.getElementById('rateUSD').value = '25.00';
+            document.getElementById('rateEUR').value = '27.00';
+        }
+    }
+    
+    async function saveCurrencyConfig(e) {
+        e.preventDefault();
+        const usd = parseFloat(document.getElementById('rateUSD').value);
+        const eur = parseFloat(document.getElementById('rateEUR').value);
+        try {
+            await authFetch('/api/admin/config', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ monedaBase: 'CUP', tasas: { CUP: 1, USD: 1 / usd, EUR: 1 / eur } })
+            });
+            showAdminToast('✅ Configuración guardada');
+        } catch(e) { 
+            showAdminToast('❌ Error al guardar', 'error'); 
+        }
+    }
+    
+    checkAuth();
+</script>
+</body>
+</html>
