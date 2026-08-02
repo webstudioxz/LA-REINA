@@ -823,15 +823,15 @@
             <h4><i class="fas fa-clipboard-list"></i> Datos de Envío</h4>
             <div class="form-group">
                 <label><i class="fas fa-user"></i> Nombre Completo</label>
-                <input type="text" class="form-control" id="cliName" placeholder="Ej: Juan Pérez González">
+                <input type="text" class="form-control" id="cliName" placeholder="Ej: Juan Pérez González" required>
             </div>
             <div class="form-group">
                 <label><i class="fas fa-phone"></i> Teléfono</label>
-                <input type="tel" class="form-control" id="cliPhone" placeholder="+53 5XXXXXXX">
+                <input type="tel" class="form-control" id="cliPhone" placeholder="+53 5XXXXXXX" required>
             </div>
             <div class="form-group">
                 <label><i class="fas fa-map-marker-alt"></i> Dirección de Envío</label>
-                <textarea class="form-control" id="cliAddress" rows="2" placeholder="Calle, número, municipio..."></textarea>
+                <textarea class="form-control" id="cliAddress" rows="2" placeholder="Calle, número, municipio..." required></textarea>
             </div>
             <div class="form-group">
                 <label><i class="fas fa-credit-card"></i> Método de Pago</label>
@@ -896,6 +896,10 @@
 <div class="toast-notification" id="toast"><i class="fas fa-check-circle"></i><span id="toastMsg">Producto añadido</span></div>
 
 <script>
+    // ============================================
+    // INDEX.JS - VERSIÓN BLINDADA CON SEGURIDAD MEJORADA
+    // ============================================
+    
     const urlParams = new URLSearchParams(window.location.search);
     let currentStore = urlParams.get('tienda') || '';
     
@@ -907,10 +911,65 @@
     let storeConfig = null;
     let storeInfo = null;
     let offlineSlideshowInterval = null;
-    
-    // Variable para controlar la primera carga
     let primeraCarga = true;
+    let csrfToken = '';
 
+    // ============================================
+    // GENERAR CSRF TOKEN
+    // ============================================
+    function generarCSRFToken() {
+        const array = new Uint8Array(32);
+        crypto.getRandomValues(array);
+        return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+    }
+    csrfToken = generarCSRFToken();
+
+    // ============================================
+    // FUNCIONES DE TOAST
+    // ============================================
+    function showToast(m, type='success') {
+        const toast = document.getElementById('toast');
+        const icon = toast.querySelector('i');
+        toast.style.borderLeftColor = type==='success'?'var(--success-color)':'var(--danger-color)';
+        icon.style.color = type==='success'?'var(--success-color)':'var(--danger-color)';
+        icon.className = type==='success'?'fas fa-check-circle':'fas fa-exclamation-circle';
+        document.getElementById('toastMsg').innerText = m;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    // ============================================
+    // FUNCIONES DE VALIDACIÓN (CLIENTE)
+    // ============================================
+    function validarTelefonoCubano(telefono) {
+        const telefonoLimpio = telefono.replace(/\s/g, '');
+        const patron = /^(?:\+53|53)?[ ]?[0-9]{8}$/;
+        if (!patron.test(telefonoLimpio)) return false;
+        const digitos = telefonoLimpio.replace(/\D/g, '');
+        if (digitos.length !== 8) return false;
+        if (!digitos.startsWith('5')) return false;
+        return true;
+    }
+
+    function validarDireccion(direccion) {
+        if (!direccion || direccion.length < 5) return false;
+        if (direccion.length > 200) return false;
+        const tieneNumero = /\d/.test(direccion);
+        const tieneLetra = /[a-zA-ZáéíóúÁÉÍÓÚñÑ]/.test(direccion);
+        return tieneNumero && tieneLetra;
+    }
+
+    function sanitizarInput(texto) {
+        if (!texto) return '';
+        texto = texto.replace(/[<>{}[\]\\;'"`]/g, '');
+        texto = texto.replace(/\s+/g, ' ').trim();
+        return texto.slice(0, 200);
+    }
+
+    // ============================================
+    // FUNCIONES DE CARGA Y RENDERIZADO
+    // ============================================
+    
     function showEmptyProductsMessage() {
         const container = document.getElementById('dynamicContent');
         container.innerHTML = `
@@ -959,24 +1018,20 @@
                 return;
             }
             
-            // Si es la primera carga y no hay tienda seleccionada, usar la primera
             if (primeraCarga && (!currentStore || currentStore === '')) {
                 currentStore = tiendas[0].id;
                 const url = new URL(window.location);
                 url.searchParams.set('tienda', currentStore);
                 window.history.pushState({}, '', url);
-                console.log(`🔄 Primera carga - Mostrando tienda: ${currentStore}`);
                 primeraCarga = false;
             }
             
-            // Verificar que la tienda actual existe en la lista
             const tiendaExiste = tiendas.some(t => t.id === currentStore);
             if (!tiendaExiste && tiendas.length > 0) {
                 currentStore = tiendas[0].id;
                 const url = new URL(window.location);
                 url.searchParams.set('tienda', currentStore);
                 window.history.pushState({}, '', url);
-                console.log(`🔄 Tienda anterior no existe - Cambiando a: ${currentStore}`);
             }
             
             container.innerHTML = tiendas.map(t => `
@@ -989,6 +1044,10 @@
         }
     }
 
+    // ============================================
+    // MONEDA Y CONVERSIÓN
+    // ============================================
+    
     const currencyBtn = document.getElementById('currencyBtn');
     const currencyMenu = document.getElementById('currencyMenu');
     
@@ -1011,6 +1070,10 @@
         });
     });
 
+    // ============================================
+    // CONEXIÓN Y CARGA DE DATOS
+    // ============================================
+    
     async function checkServerAndReload() {
         const statusEl = document.getElementById('footerStatus');
         const offlineScreen = document.getElementById('offlineScreen');
@@ -1023,9 +1086,7 @@
                 statusEl.innerHTML = '<i class="fas fa-circle" style="color:#10b981"></i> Tienda Abierta';
                 statusEl.className = 'footer-status online';
                 clearOfflineSlideshow();
-                
                 await refreshAllData();
-                
                 return true;
             }
         } catch(e) {
@@ -1056,7 +1117,6 @@
             const cats = [...new Set(products.map(p => p.categoria || 'otros'))];
             categorias = cats;
             renderCategorias();
-            
             renderContent();
             
             console.log(`✅ Productos actualizados: ${products.length} productos para tienda ${currentStore}`);
@@ -1089,6 +1149,10 @@
         return currentCurrency === 'CUP' ? `$${v.toFixed(0)}` : `${currentCurrency} ${v.toFixed(2)}`;
     }
 
+    // ============================================
+    // CATEGORÍAS Y PRODUCTOS
+    // ============================================
+    
     async function loadCategorias() {
         try { 
             const r = await fetch(`/api/categorias?tienda=${currentStore}&_=${Date.now()}`); 
@@ -1145,6 +1209,10 @@
         renderContent();
     }
 
+    // ============================================
+    // RENDERIZADO DE CONTENIDO
+    // ============================================
+    
     function renderContent() {
         const container = document.getElementById('dynamicContent');
         
@@ -1287,6 +1355,10 @@
         if (v >= 1) val.innerText = v;
     };
 
+    // ============================================
+    // MODAL DE PRODUCTO
+    // ============================================
+    
     window.openProductModal = (id) => {
         const p = products.find(x => x.id == id);
         if (!p) return;
@@ -1347,6 +1419,10 @@
         closeProductModal();
     };
 
+    // ============================================
+    // CARRITO DE COMPRAS
+    // ============================================
+    
     window.addToCartFromCard = (id, btn) => {
         const card = btn.closest('.producto-card');
         const qty = parseInt(card.querySelector('.qty-val').innerText);
@@ -1448,18 +1524,11 @@
         const saved = localStorage.getItem(`lareina_cart_${currentStore}`);
         if(saved) try { cart = JSON.parse(saved); updateCartUI(); } catch { cart = []; }
     }
-    
-    function showToast(m, type='success') {
-        const toast = document.getElementById('toast');
-        const icon = toast.querySelector('i');
-        toast.style.borderLeftColor = type==='success'?'var(--success-color)':'var(--danger-color)';
-        icon.style.color = type==='success'?'var(--success-color)':'var(--danger-color)';
-        icon.className = type==='success'?'fas fa-check-circle':'fas fa-exclamation-circle';
-        document.getElementById('toastMsg').innerText = m;
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 2500);
-    }
 
+    // ============================================
+    // CHECKOUT Y PEDIDOS (CON SEGURIDAD)
+    // ============================================
+    
     window.toggleBankInfo = () => {
         const metodo = document.querySelector('input[name="paymentMethod"]:checked')?.value;
         const bankBox = document.getElementById('bankInfoBox');
@@ -1470,43 +1539,43 @@
         if (codigoBox) codigoBox.style.display = 'none';
         
         if (metodo === 'Transferencia') {
-            const numeroTarjeta = storeConfig?.datos_bancarios?.numero_tarjeta;
-            const whatsapp = storeConfig?.datos_bancarios?.whatsapp_confirmacion;
-            
-            if (!numeroTarjeta || numeroTarjeta.trim() === '') {
-                bankBox.classList.remove('visible');
-                noCardWarning.style.display = 'block';
-                if(btnConfirmar) {
-                    btnConfirmar.disabled = true;
-                    btnConfirmar.style.opacity = '0.5';
-                    btnConfirmar.style.cursor = 'not-allowed';
-                }
-            } else {
-                noCardWarning.style.display = 'none';
-                if(btnConfirmar) {
-                    btnConfirmar.disabled = false;
-                    btnConfirmar.style.opacity = '1';
-                    btnConfirmar.style.cursor = 'pointer';
-                }
-                
-                document.getElementById('bankCardNumber').innerText = numeroTarjeta;
-                
-                if (whatsapp) {
-                    const total = cart.reduce((s,i) => s + i.precio * i.qty, 0);
-                    const mensaje = encodeURIComponent(
-                        `Hola, adjunto comprobante de transferencia por ${formatPrice(total)} ` +
-                        `del pedido en ${storeInfo?.nombre || currentStore}. ` +
-                        `Nombre: [Escribe tu nombre aquí]`
-                    );
-                    document.getElementById('whatsappBankLink').href = 
-                        `https://wa.me/${whatsapp.replace(/\D/g,'')}?text=${mensaje}`;
-                    document.getElementById('whatsappBankLink').style.display = 'block';
+            // Cargar configuración desde el servidor
+            cargarConfiguracionTransferencia().then(config => {
+                if (!config.tarjeta_configurada) {
+                    bankBox.classList.remove('visible');
+                    noCardWarning.style.display = 'block';
+                    if(btnConfirmar) {
+                        btnConfirmar.disabled = true;
+                        btnConfirmar.style.opacity = '0.5';
+                        btnConfirmar.style.cursor = 'not-allowed';
+                    }
                 } else {
-                    document.getElementById('whatsappBankLink').style.display = 'none';
+                    noCardWarning.style.display = 'none';
+                    if(btnConfirmar) {
+                        btnConfirmar.disabled = false;
+                        btnConfirmar.style.opacity = '1';
+                        btnConfirmar.style.cursor = 'pointer';
+                    }
+                    
+                    document.getElementById('bankCardNumber').innerText = config.tarjeta || 'No configurada';
+                    
+                    if (config.whatsapp) {
+                        const total = cart.reduce((s,i) => s + i.precio * i.qty, 0);
+                        const mensaje = encodeURIComponent(
+                            `Hola, adjunto comprobante de transferencia por ${formatPrice(total)} ` +
+                            `del pedido en ${storeInfo?.nombre || currentStore}. ` +
+                            `Nombre: [Escribe tu nombre aquí]`
+                        );
+                        document.getElementById('whatsappBankLink').href = 
+                            `https://wa.me/${config.whatsapp.replace(/\D/g,'')}?text=${mensaje}`;
+                        document.getElementById('whatsappBankLink').style.display = 'block';
+                    } else {
+                        document.getElementById('whatsappBankLink').style.display = 'none';
+                    }
+                    
+                    bankBox.classList.add('visible');
                 }
-                
-                bankBox.classList.add('visible');
-            }
+            });
         } else {
             bankBox.classList.remove('visible');
             noCardWarning.style.display = 'none';
@@ -1517,6 +1586,21 @@
             }
         }
     };
+
+    async function cargarConfiguracionTransferencia() {
+        try {
+            const res = await fetch(`/api/tiendas/${currentStore}/config`);
+            const config = await res.json();
+            return {
+                tarjeta_configurada: !!config.tarjeta_ultimos_digitos,
+                tarjeta: config.tarjeta_ultimos_digitos ? `**** **** **** ${config.tarjeta_ultimos_digitos}` : '',
+                whatsapp: config.whatsapp_confirmacion || ''
+            };
+        } catch(e) {
+            console.error('Error cargando configuración:', e);
+            return { tarjeta_configurada: false, tarjeta: '', whatsapp: '' };
+        }
+    }
 
     window.showCheckoutForm = () => {
         if (!cart.length) { 
@@ -1559,8 +1643,17 @@
         const d = document.getElementById('cliAddress').value.trim();
         const metodoPago = document.querySelector('input[name="paymentMethod"]:checked')?.value || 'Efectivo';
         
-        if (!n || !t || !d) { 
-            showToast('⚠️ Completa todos los campos', 'error'); 
+        // Validaciones de seguridad
+        if (!n || n.length < 3) { 
+            showToast('⚠️ Nombre completo requerido (mínimo 3 caracteres)', 'error'); 
+            return; 
+        }
+        if (!validarTelefonoCubano(t)) { 
+            showToast('⚠️ Teléfono inválido. Use formato +53 5XXXXXXX', 'error'); 
+            return; 
+        }
+        if (!validarDireccion(d)) { 
+            showToast('⚠️ Dirección inválida (debe contener número y calle)', 'error'); 
             return; 
         }
         if (!cart.length) { 
@@ -1569,8 +1662,8 @@
         }
         
         if (metodoPago === 'Transferencia') {
-            const numeroTarjeta = storeConfig?.datos_bancarios?.numero_tarjeta;
-            if (!numeroTarjeta || numeroTarjeta.trim() === '') {
+            const config = await cargarConfiguracionTransferencia();
+            if (!config.tarjeta_configurada) {
                 showToast('❌ Transferencia no disponible. Contacte al administrador.', 'error');
                 return;
             }
@@ -1581,18 +1674,21 @@
         try {
             const r = await fetch('/api/pedidos', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrfToken
+                },
                 body: JSON.stringify({ 
                     tienda: currentStore, 
-                    nombre: n, 
-                    telefono: t, 
-                    direccion: d, 
+                    nombre: sanitizarInput(n), 
+                    telefono: t.replace(/\s/g, ''), 
+                    direccion: sanitizarInput(d), 
                     items: cart.map(item => ({
                         id: item.id,
-                        nombre: item.nombre,
+                        nombre: sanitizarInput(item.nombre),
                         precio: item.precio,
                         qty: item.qty,
-                        imagen: item.imagen
+                        descuento: 0
                     })), 
                     total, 
                     moneda: currentCurrency, 
@@ -1618,6 +1714,10 @@
             showToast('❌ Error de conexión', 'error'); 
         }
     };
+    
+    // ============================================
+    // OFFLINE SLIDESHOW
+    // ============================================
     
     function generateOfflineSlides() {
         const slidesContainer = document.getElementById('promoSlides');
@@ -1683,6 +1783,10 @@
         }
     }
 
+    // ============================================
+    // UTILIDADES
+    // ============================================
+    
     window.scrollToProducts = () => document.getElementById('productosSection').scrollIntoView({behavior:'smooth'});
 
     document.getElementById('menuToggle').onclick = () => {
@@ -1712,13 +1816,15 @@
         }
     };
 
+    // ============================================
+    // INICIALIZACIÓN
+    // ============================================
+    
     async function init() {
         console.log("🚀 Iniciando tienda...");
         
-        // Primero cargar las tiendas para saber cuál mostrar
         await loadTiendasMenu();
         
-        // Si no hay tiendas, mostrar mensaje y salir
         if (!currentStore || currentStore === '') {
             document.getElementById('dynamicContent').innerHTML = `
                 <div class="empty-products">
@@ -1731,7 +1837,6 @@
             return;
         }
         
-        // Actualizar la interfaz con la tienda seleccionada
         await updateUIForStore();
         
         const online = await checkServerAndReload();
@@ -1740,7 +1845,6 @@
             generateOfflineSlides();
         }
         
-        // Actualizar el menú para resaltar la tienda activa
         await loadTiendasMenu();
         
         document.getElementById('globalLoader').classList.add('hidden');
