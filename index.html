@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Título dinámico con SEO -->
+    <title id="dynamicTitle">Tienda La Reina | Electrodomésticos y Ofertas</title>
+    
+    <!-- Meta tags SEO -->
+    <meta name="description" content="Tienda La Reina - Encuentra los mejores productos con envío a domicilio. Ofertas exclusivas en electrodomésticos, ropa y más.">
+    <meta name="keywords" content="tienda online, electrodomésticos, ofertas, compras, La Reina, Cuba">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://la-reina-mgje.onrender.com/" id="canonicalUrl">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Tienda La Reina - Tu tienda de confianza">
+    <meta property="og:description" content="Encuentra los mejores productos con ofertas exclusivas. Envíos a domicilio.">
+    <meta property="og:image" content="https://d.top4top.io/p_3525b1u9b0.jpg">
+    <meta property="og:url" content="https://la-reina-mgje.onrender.com/">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="es_ES">
+    
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Tienda La Reina - Tu tienda de confianza">
+    <meta name="twitter:description" content="Encuentra los mejores productos con ofertas exclusivas.">
+    <meta name="twitter:image" content="https://d.top4top.io/p_3525b1u9b0.jpg">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👑</text></svg>">
+    
+    <!-- Preconnect para recursos externos -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    
+    <!-- CSS - Cargado de forma optimizada -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+    
+    <!-- Critical CSS inline para renderizado rápido -->
+    <style>
+        :root{--primary-color:#4f46e5;--primary-gradient:linear-gradient(135deg,#4f46e5,#8b5cf6,#a855f7);--accent-color:#f97316;--text-dark:#1e293b;--bg-light:#f8fafc}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',sans-serif;background-color:var(--bg-light);color:var(--text-dark);line-height:1.6}
+        .global-loader{position:fixed;inset:0;background:var(--bg-light);z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center}
+        .loader-spinner{width:70px;height:70px;border-radius:50%;background:conic-gradient(from 0deg,transparent,var(--primary-color),var(--accent-color),transparent);animation:spin 1.2s linear infinite;position:relative}
+        .loader-spinner::before{content:'';position:absolute;inset:8px;background:var(--bg-light);border-radius:50%}
+        @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+        .global-loader.hidden{opacity:0;visibility:hidden;pointer-events:none}
+        .skip-link{position:absolute;top:-100%;left:50%;transform:translateX(-50%);background:var(--primary-color);color:white;padding:12px 24px;border-radius:8px;z-index:10000;font-weight:600;text-decoration:none}
+        .skip-link:focus{top:16px}
+    </style>
+    
+    <!-- Resto del CSS cargado después -->
+    <link rel="preload" href="/style.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/style.css"></noscript>
+    
+    <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Tienda La Reina",
+        "url": "https://la-reina-mgje.onrender.com",
+        "description": "Tienda online con envíos a domicilio. Productos de calidad.",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://la-reina-mgje.onrender.com/?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+        }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Tienda La Reina",
+        "url": "https://la-reina-mgje.onrender.com",
+        "logo": "https://i.ibb.co/LDG7Gf2d/fotor-ai-2025020222510.jpg",
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+53 5XXXXXXX",
+            "contactType": "customer service"
+        }
+    }
+    </script>
+</head>
+<body>
+    <!-- Skip Link - Accesibilidad -->
+    <a href="#mainContent" class="skip-link" tabindex="0">Saltar al contenido principal</a>
+    
+    <!-- Global Loader -->
+    <div class="global-loader" id="globalLoader" role="status" aria-live="polite">
+        <div class="loader-spinner" aria-hidden="true"></div>
+        <div class="loader-text">Cargando Tienda</div>
+    </div>
+    
+    <!-- Offline Screen -->
+    <div class="offline-screen" id="offlineScreen" role="alert" aria-hidden="true">
+        <div class="promo-carousel">
+            <div class="promo-slides" id="promoSlides"></div>
+            <div class="promo-indicators" id="promoIndicators"></div>
+            <div class="offline-footer">
+                <span><i class="fas fa-wifi-slash"></i> Sin conexión</span>
+                <button class="retry-btn" onclick="checkServerAndReload()"><i class="fas fa-sync-alt"></i> Reintentar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Product Modal -->
+    <div class="product-modal" id="productModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" onclick="if(event.target===this)closeProductModal()">
+        <div class="product-modal-content">
+            <button class="modal-close" onclick="closeProductModal()" aria-label="Cerrar modal"><i class="fas fa-times"></i></button>
+            <div class="product-modal-body" id="modalBody"></div>
+        </div>
+    </div>
+    
+    <!-- Header -->
+    <header role="banner">
+        <a href="/" class="logo-container">
+            <img src="https://i.ibb.co/LDG7Gf2d/fotor-ai-2025020222510.jpg" alt="Logo Tienda La Reina" class="logo-img" width="36" height="36">
+            <span class="brand-name" id="headerStoreName">Tienda La Reina</span>
+        </a>
+        
+        <div class="header-right">
+            <div class="currency-dropdown">
+                <button class="currency-btn" id="currencyBtn" aria-label="Seleccionar moneda">
+                    <i class="fas fa-coins"></i>
+                    <span id="selectedCurrencyText">CUP</span>
+                    <i class="fas fa-chevron-down" style="font-size:0.5rem;margin-left:3px;"></i>
+                </button>
+                <div class="currency-menu" id="currencyMenu" role="menu">
+                    <div class="currency-option active" data-currency="CUP" role="menuitem"><i class="fas fa-coins"></i> 🇨🇺 CUP</div>
+                    <div class="currency-option" data-currency="USD" role="menuitem"><i class="fas fa-dollar-sign"></i> 🇺🇸 USD</div>
+                    <div class="currency-option" data-currency="EUR" role="menuitem"><i class="fas fa-euro-sign"></i> 🇪🇺 EUR</div>
+                </div>
+            </div>
+            <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú"><i class="fas fa-bars"></i></button>
+        </div>
+    </header>
+    
+    <!-- Category Nav -->
+    <nav class="sticky-nav" id="categoryNav" aria-label="Categorías"></nav>
+    
+    <!-- Main Content -->
+    <main id="mainContent" role="main">
+        <section class="hero" id="heroSection">
+            <div class="hero-content">
+                <h1 id="heroTitle">Bienvenido</h1>
+                <p id="heroDescription">Encuentra los mejores productos.</p>
+                <button class="btn-hero" onclick="scrollToProducts()">Ver Catálogo <i class="fas fa-arrow-right"></i></button>
+            </div>
+        </section>
+
+        <section id="productosSection">
+            <h2 class="section-title" id="categoryTitle">
+                <i class="fas fa-box-open"></i>
+                <span>Todos los Productos</span>
+            </h2>
+            <div id="dynamicContent"></div>
+        </section>
+    </main>
+    
+    <!-- Footer -->
+    <footer role="contentinfo">
+        <div class="footer-logo">Tienda La Reina</div>
+        <p style="color:var(--text-gray);margin-bottom:3px;font-size:0.8rem;">Calidad y Confianza</p>
+        <span class="footer-status" id="footerStatus"><i class="fas fa-spinner fa-spin"></i> Verificando...</span>
+        <p style="margin-top:8px;font-size:0.65rem;color:#94a3b8;">&copy; 2026 Tienda La Reina</p>
+    </footer>
+    
+    <!-- Side Menu -->
+    <div class="overlay" id="overlay"></div>
+    <div class="panel-desplegable" id="sideMenu" role="navigation" aria-label="Menú lateral">
+        <div class="panel-header">
+            <h3>Menú</h3>
+            <button class="close-panel-btn" id="closeMenu" aria-label="Cerrar menú"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="tiendas-list">
+            <p>NUESTRAS TIENDAS</p>
+            <div id="tiendasList"></div>
+        </div>
+    </div>
+    
+    <!-- Floating Cart -->
+    <div class="floating-cart" id="cartBtn" role="button" tabindex="0" aria-label="Abrir carrito">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="cart-badge" id="cartCount">0</span>
+    </div>
+    
+    <button class="floating-checkout-btn" id="floatingCheckoutBtn" onclick="showCheckoutForm()">
+        <i class="fas fa-arrow-right"></i> Continuar Compra
+    </button>
+    
+    <!-- Cart Panel -->
+    <div class="cart-panel" id="cartPanel" role="dialog" aria-modal="true" aria-label="Carrito de compras">
+        <div class="cart-header">
+            <h3><i class="fas fa-shopping-bag" style="color:var(--primary-color);"></i> Tu Carrito</h3>
+            <button class="close-cart" id="closeCart" aria-label="Cerrar carrito"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <div id="cartItemsView" style="display:flex;flex-direction:column;height:100%;">
+            <div class="cart-items" id="cartItemsContainer">
+                <div class="cart-empty-state"><i class="fas fa-shopping-basket"></i><p>Tu carrito está vacío</p></div>
+            </div>
+            <div class="cart-footer" id="cartFooter">
+                <div class="cart-total"><span>Subtotal:</span> <span id="cartSubtotal">0 CUP</span></div>
+                <div class="cart-total final"><span>Total:</span> <span id="cartTotal">0 CUP</span></div>
+                <button class="btn-block btn-checkout" onclick="showCheckoutForm()">
+                    <i class="fas fa-arrow-right"></i> Continuar
+                </button>
+            </div>
+        </div>
+        
+        <div id="checkoutFormView" style="display:none;height:100%;overflow-y:auto;">
+            <div class="checkout-form">
+                <h4><i class="fas fa-clipboard-list"></i> Datos de Envío</h4>
+                
+                <div class="form-group">
+                    <label for="cliName"><i class="fas fa-user"></i> Nombre Completo <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="cliName" placeholder="Ej: Juan Pérez González" maxlength="60" required autocomplete="name">
+                    <small class="form-text">Solo letras y espacios (máximo 60 caracteres)</small>
+                    <div id="nameWarning" style="display:none;color:var(--danger-color);font-size:0.75rem;margin-top:3px;">
+                        <i class="fas fa-exclamation-circle"></i> <span id="nameWarningText"></span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="cliPhone"><i class="fas fa-phone"></i> Teléfono <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text" style="background:#f1f5f9;font-weight:600;">+53</span>
+                        <input type="tel" class="form-control" id="cliPhone" placeholder="5XXXXXXX" maxlength="12" required autocomplete="tel" inputmode="numeric">
+                    </div>
+                    <small class="form-text">Número cubano: <strong>5XXXXXXX</strong> (8 dígitos)</small>
+                    <div id="phoneWarning" style="display:none;color:var(--danger-color);font-size:0.75rem;margin-top:3px;">
+                        <i class="fas fa-exclamation-circle"></i> <span id="phoneWarningText"></span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="cliAddress"><i class="fas fa-map-marker-alt"></i> Dirección de Envío <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="cliAddress" rows="2" placeholder="Ej: Calle 123 #456 entre 5ta y 7ma / Reparto" maxlength="200" required></textarea>
+                    <small class="form-text">Máximo 200 caracteres. Caracteres permitidos: letras, números, espacios, #, /, ., ,, -</small>
+                    <div id="addressWarning" style="display:none;color:var(--danger-color);font-size:0.75rem;margin-top:3px;">
+                        <i class="fas fa-exclamation-circle"></i> <span id="addressWarningText"></span>
+                    </div>
+                </div>
+                
+                <div class="form-group" style="display:none !important; position:absolute; left:-9999px; top:-9999px; height:0; width:0; overflow:hidden;">
+                    <label for="honeypot">Si eres humano, deja este campo vacío</label>
+                    <input type="text" id="honeypot" name="honeypot" value="" tabindex="-1" autocomplete="off">
+                </div>
+                
+                <div id="cooldownIndicator" style="display:none; text-align:center; padding:10px; background:#fef3c7; border-radius:8px; margin:10px 0; border:1px solid #fcd34d;">
+                    <i class="fas fa-clock" style="color:#f59e0b; margin-right:8px;"></i>
+                    <span id="cooldownMessage">Por favor espera <strong id="cooldownSeconds">30</strong> segundos antes de realizar otro pedido.</span>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-credit-card"></i> Método de Pago</label>
+                    <div class="payment-methods">
+                        <label class="payment-option">
+                            <input type="radio" name="paymentMethod" value="Efectivo" checked onchange="toggleBankInfo()"> Efectivo
+                        </label>
+                        <label class="payment-option">
+                            <input type="radio" name="paymentMethod" value="Transferencia" onchange="toggleBankInfo()"> Transferencia
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="bank-info-box" id="bankInfoBox">
+                    <h5><i class="fas fa-university"></i> Datos para Transferencia</h5>
+                    <div class="bank-detail">
+                        <i class="fas fa-credit-card"></i>
+                        <div>
+                            <small style="color:var(--text-gray);display:block;">Número de Tarjeta</small>
+                            <strong id="bankCardNumber">---</strong>
+                        </div>
+                    </div>
+                    <div class="transfer-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Importante:</strong> Después de realizar la transferencia, envíe una <strong>captura de pantalla del comprobante de pago</strong> por WhatsApp para confirmar su pedido.
+                    </div>
+                    <a href="#" class="whatsapp-link-btn" id="whatsappBankLink" target="_blank">
+                        <i class="fab fa-whatsapp"></i> Enviar Comprobante por WhatsApp
+                    </a>
+                </div>
+                
+                <div class="bank-info-box" id="noCardWarning" style="display:none;border-color:#ef4444;">
+                    <div class="transfer-warning" style="margin:0;background:#fef2f2;border-color:#fca5a5;color:#991b1b;">
+                        <i class="fas fa-exclamation-circle" style="color:#ef4444;"></i>
+                        <strong>Transferencia no disponible:</strong> Esta tienda no tiene configurado el número de tarjeta.
+                    </div>
+                </div>
+                
+                <div class="codigo-cliente-box" id="codigoClienteBox" style="display:none;">
+                    <h4><i class="fas fa-qrcode"></i> Su Código de Pedido</h4>
+                    <div class="codigo-cliente-display" id="codigoClienteDisplay"></div>
+                    <small>Guarde este código. Lo necesitará para dar seguimiento a su pedido.</small>
+                </div>
+                
+                <div style="background:white;border-radius:10px;padding:14px;margin:14px 0;box-shadow:var(--shadow-sm);">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
+                        <span>Total a pagar:</span>
+                        <strong id="checkoutTotalAmount" style="color:var(--primary-color);font-size:1rem;">0 CUP</strong>
+                    </div>
+                </div>
+                
+                <button class="btn-block btn-checkout" id="btnConfirmarPedido" onclick="enviarPedido()">
+                    <i class="fas fa-check-circle"></i> Confirmar Pedido
+                </button>
+                <button class="btn-block" style="background:#e2e8f0;color:var(--text-gray);margin-top:6px;" onclick="cancelarCheckout()">
+                    <i class="fas fa-arrow-left"></i> Volver al Carrito
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast -->
+    <div class="toast-notification" id="toast"><i class="fas fa-check-circle" style="color:var(--success-color);"></i><span id="toastMsg">Producto añadido</span></div>
+    
+    <!-- Script -->
+    <script src="/app.js" defer></script>
+</body>
+</html>
