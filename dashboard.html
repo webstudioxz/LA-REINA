@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Feature Flags</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+        }
+        .header h1 {
+            font-size: 1.5rem; font-weight: 800;
+            background: linear-gradient(135deg, #4f46e5, #8b5cf6);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .header-actions { display: flex; gap: 10px; align-items: center; }
+        .badge {
+            padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600;
+        }
+        .badge-success { background: #dcfce7; color: #166534; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+        .badge-warning { background: #fef9c3; color: #854d0e; }
+        
+        .card {
+            background: white; border-radius: 12px; padding: 20px;
+            margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .card-title {
+            font-weight: 700; font-size: 0.9rem; margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .card-title i { color: #4f46e5; }
+        
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px;
+        }
+        .stat-item {
+            background: #f8fafc; padding: 16px; border-radius: 10px; text-align: center;
+        }
+        .stat-value { font-size: 1.8rem; font-weight: 800; color: #0f172a; }
+        .stat-label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.3px; }
+        
+        .flag-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 0; border-bottom: 1px solid #f1f5f9; flex-wrap: wrap; gap: 12px;
+        }
+        .flag-item:last-child { border-bottom: none; }
+        .flag-info { flex-grow: 1; min-width: 200px; }
+        .flag-name { font-weight: 600; font-size: 0.95rem; }
+        .flag-desc { font-size: 0.8rem; color: #64748b; }
+        .flag-meta {
+            display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px;
+        }
+        .flag-controls {
+            display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+        }
+        .toggle {
+            width: 48px; height: 26px; background: #cbd5e1; border-radius: 30px;
+            display: inline-block; cursor: pointer; position: relative; transition: 0.3s;
+            flex-shrink: 0;
+        }
+        .toggle.active { background: #4f46e5; }
+        .toggle::after {
+            content: ''; position: absolute; top: 2px; left: 2px;
+            width: 22px; height: 22px; background: white; border-radius: 50%;
+            transition: 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .toggle.active::after { left: 24px; }
+        .toggle.disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        input[type="number"] {
+            width: 65px; padding: 6px 8px; border: 1.5px solid #e2e8f0;
+            border-radius: 8px; font-size: 0.85rem; font-weight: 600;
+        }
+        input[type="number"]:focus { outline: none; border-color: #4f46e5; }
+        
+        .btn {
+            padding: 6px 14px; border: none; border-radius: 8px;
+            font-weight: 600; font-size: 0.75rem; cursor: pointer;
+            transition: all 0.2s; display: inline-flex; align-items: center; gap: 4px;
+        }
+        .btn-primary { background: #4f46e5; color: white; }
+        .btn-primary:hover { background: #4338ca; transform: translateY(-1px); }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-danger:hover { background: #dc2626; transform: translateY(-1px); }
+        .btn-outline { background: transparent; border: 1px solid #e2e8f0; }
+        .btn-outline:hover { background: #f8fafc; }
+        .btn-sm { padding: 4px 10px; font-size: 0.7rem; }
+        
+        .log-container {
+            max-height: 200px; overflow-y: auto; font-family: monospace;
+            font-size: 0.8rem; background: #0f172a; color: #e2e8f0;
+            padding: 12px 16px; border-radius: 8px;
+        }
+        .log-container::-webkit-scrollbar { width: 4px; }
+        .log-container::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        .log-entry { padding: 2px 0; border-bottom: 1px solid #1e293b; }
+        .log-entry .time { color: #64748b; margin-right: 8px; }
+        .log-entry .info { color: #60a5fa; }
+        .log-entry .warn { color: #fbbf24; }
+        .log-entry .error { color: #f87171; }
+        .log-entry .success { color: #34d399; }
+        
+        .alert {
+            padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;
+            font-size: 0.85rem;
+        }
+        .alert-info { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+        .alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .alert-danger { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        .alert-warning { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+        
+        .refresh-btn {
+            background: transparent; border: none; color: #64748b;
+            cursor: pointer; font-size: 1.1rem; transition: 0.3s;
+        }
+        .refresh-btn:hover { color: #4f46e5; transform: rotate(180deg); }
+        .refresh-btn.spinning { animation: spin 0.6s linear; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        @media (max-width: 640px) {
+            .flag-item { flex-direction: column; align-items: stretch; }
+            .flag-controls { justify-content: flex-start; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <h1><i class="fas fa-flag-checkered" style="color:#4f46e5;margin-right:8px;"></i> Dashboard de Feature Flags</h1>
+        <div class="header-actions">
+            <span class="badge badge-success" id="statusBadge"><i class="fas fa-circle" style="font-size:0.5rem;margin-right:4px;"></i> En línea</span>
+            <button class="refresh-btn" id="refreshBtn" onclick="refreshAll()"><i class="fas fa-sync-alt"></i></button>
+        </div>
+    </div>
+
+    <!-- Métricas -->
+    <div class="card">
+        <div class="card-title"><i class="fas fa-chart-line"></i> Métricas de Salud</div>
+        <div class="stats-grid" id="healthStats">
+            <div class="stat-item">
+                <div class="stat-value" id="totalRequests">0</div>
+                <div class="stat-label">Peticiones Totales</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="errorRate">0%</div>
+                <div class="stat-label">Tasa de Error</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="newUIUsers">0</div>
+                <div class="stat-label">Usuarios en Nueva UI</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="uptime">0s</div>
+                <div class="stat-label">Tiempo Activo</div>
+            </div>
+        </div>
+        <div id="healthAlert" style="margin-top:12px;"></div>
+    </div>
+
+    <!-- Control de Flags -->
+    <div class="card">
+        <div class="card-title"><i class="fas fa-sliders-h"></i> Control de Flags</div>
+        <div id="featureFlagsList"></div>
+    </div>
+
+    <!-- Log de Actividad -->
+    <div class="card">
+        <div class="card-title"><i class="fas fa-history"></i> Log de Actividad</div>
+        <div class="log-container" id="activityLog"></div>
+    </div>
+</div>
+
+<script>
+    // ============================================
+    // DASHBOARD - CONTROL DE FEATURE FLAGS
+    // ============================================
+
+    let activityLogEntries = [];
+    const MAX_LOG_ENTRIES = 100;
+
+    // Obtener flags
+    async function fetchFlags() {
+        try {
+            const response = await fetch('/api/admin/feature-flags?_=' + Date.now());
+            if (!response.ok) throw new Error('Error fetching flags');
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching flags:', error);
+            return {};
+        }
+    }
+
+    // Actualizar un flag
+    async function updateFlag(flagKey, updates) {
+        try {
+            const response = await fetch(`/api/admin/feature-flags/${flagKey}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updates)
+            });
+            if (!response.ok) throw new Error('Error updating flag');
+            const result = await response.json();
+            logActivity(`🔄 Flag "${flagKey}" actualizado: ${JSON.stringify(updates)}`, 'info');
+            return result;
+        } catch (error) {
+            logActivity(`❌ Error actualizando "${flagKey}": ${error.message}`, 'error');
+            throw error;
+        }
+    }
+
+    // Renderizar flags
+    async function renderFlags() {
+        const container = document.getElementById('featureFlagsList');
+        try {
+            const flags = await fetchFlags();
+            
+            if (!flags || Object.keys(flags).length === 0) {
+                container.innerHTML = `<div class="alert alert-warning">No hay flags configurados.</div>`;
+                return;
+            }
+            
+            container.innerHTML = Object.entries(flags).map(([key, flag]) => `
+                <div class="flag-item" data-flag="${key}">
+                    <div class="flag-info">
+                        <div class="flag-name">${flag.name || key}</div>
+                        <div class="flag-desc">${flag.description || 'Sin descripción'}</div>
+                        <div class="flag-meta">
+                            <span class="badge ${flag.enabled ? 'badge-success' : 'badge-danger'}">
+                                ${flag.enabled ? '✅ Activo' : '⛔ Desactivado'}
+                            </span>
+                            <span class="badge badge-warning">Rollout: ${flag.rollout_percentage || 0}%</span>
+                            ${flag.enabled_users?.length > 0 ? `<span class="badge badge-info">${flag.enabled_users.length} testers</span>` : ''}
+                            ${flag.disabled_users?.length > 0 ? `<span class="badge badge-danger">${flag.disabled_users.length} excluidos</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="flag-controls">
+                        <div class="toggle ${flag.enabled ? 'active' : ''}" 
+                             onclick="toggleFlag('${key}')" 
+                             title="${flag.enabled ? 'Desactivar' : 'Activar'}">
+                        </div>
+                        <input type="number" id="rollout-${key}" 
+                               value="${flag.rollout_percentage || 0}" 
+                               min="0" max="100" 
+                               title="Porcentaje de usuarios que verán esta versión" />
+                        <button class="btn btn-primary btn-sm" onclick="updateRollout('${key}')">
+                            <i class="fas fa-percentage"></i> Aplicar
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="rollbackFlag('${key}')">
+                            <i class="fas fa-undo"></i> Rollback
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        } catch (error) {
+            container.innerHTML = `<div class="alert alert-danger">Error cargando flags: ${error.message}</div>`;
+        }
+    }
+
+    // Funciones globales para los botones
+    window.toggleFlag = async (flagKey) => {
+        try {
+            const flags = await fetchFlags();
+            const currentState = flags[flagKey]?.enabled;
+            await updateFlag(flagKey, { enabled: !currentState });
+            await renderFlags();
+            await updateMetrics();
+        } catch (error) {
+            console.error('Error toggling flag:', error);
+        }
+    };
+
+    window.updateRollout = async (flagKey) => {
+        const input = document.getElementById(`rollout-${flagKey}`);
+        if (!input) return;
+        const value = parseInt(input.value);
+        if (isNaN(value) || value < 0 || value > 100) {
+            alert('El porcentaje debe ser entre 0 y 100');
+            return;
+        }
+        try {
+            await updateFlag(flagKey, { rollout_percentage: value });
+            await renderFlags();
+            await updateMetrics();
+            logActivity(`📊 Rollout de "${flagKey}" actualizado a ${value}%`, 'info');
+        } catch (error) {
+            console.error('Error updating rollout:', error);
+        }
+    };
+
+    window.rollbackFlag = async (flagKey) => {
+        if (!confirm(`¿Desactivar el flag "${flagKey}" y establecer rollout a 0%?`)) return;
+        try {
+            await updateFlag(flagKey, { enabled: false, rollout_percentage: 0 });
+            await renderFlags();
+            await updateMetrics();
+            logActivity(`🔄 Rollback ejecutado para "${flagKey}"`, 'success');
+        } catch (error) {
+            console.error('Error in rollback:', error);
+        }
+    };
+
+    // ============================================
+    // MÉTRICAS DE SALUD
+    // ============================================
+
+    async function fetchMetrics() {
+        try {
+            const response = await fetch('/api/admin/metrics?_=' + Date.now());
+            if (!response.ok) throw new Error('Error fetching metrics');
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching metrics:', error);
+            return null;
+        }
+    }
+
+    async function updateMetrics() {
+        try {
+            const metrics = await fetchMetrics();
+            if (!metrics) return;
+            
+            document.getElementById('totalRequests').textContent = metrics.totalRequests || 0;
+            document.getElementById('errorRate').textContent = metrics.errorRate ? `${metrics.errorRate.toFixed(2)}%` : '0%';
+            document.getElementById('newUIUsers').textContent = metrics.versionCounts?.['new-ui'] || 0;
+            
+            // Calcular uptime
+            const startTime = metrics.startTime || Date.now();
+            const uptime = Math.floor((Date.now() - startTime) / 1000);
+            const hours = Math.floor(uptime / 3600);
+            const minutes = Math.floor((uptime % 3600) / 60);
+            const seconds = uptime % 60;
+            document.getElementById('uptime').textContent = 
+                hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m ${seconds}s`;
+            
+            // Mostrar alerta si hay errores
+            const alertContainer = document.getElementById('healthAlert');
+            if (metrics.errorRate > 5) {
+                alertContainer.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>⚠️ Alerta:</strong> La tasa de error (${metrics.errorRate.toFixed(2)}%) supera el umbral del 5%.
+                        ${metrics.errorsByFlag?.['new-ui'] ? ` El flag "new-ui" tiene ${metrics.errorsByFlag['new-ui']} errores.` : ''}
+                    </div>
+                `;
+            } else if (metrics.errorRate > 2) {
+                alertContainer.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <strong>⚠️ Atención:</strong> La tasa de error es ${metrics.errorRate.toFixed(2)}%. Monitoreando...
+                    </div>
+                `;
+            } else {
+                alertContainer.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i>
+                        <strong>✅ Sistema saludable:</strong> Todos los servicios funcionan correctamente.
+                    </div>
+                `;
+            }
+            
+            // Actualizar badge de estado
+            const statusBadge = document.getElementById('statusBadge');
+            if (metrics.errorRate > 5) {
+                statusBadge.className = 'badge badge-danger';
+                statusBadge.innerHTML = '<i class="fas fa-circle" style="font-size:0.5rem;margin-right:4px;"></i> Problemas detectados';
+            } else if (metrics.errorRate > 2) {
+                statusBadge.className = 'badge badge-warning';
+                statusBadge.innerHTML = '<i class="fas fa-circle" style="font-size:0.5rem;margin-right:4px;"></i> Atención';
+            } else {
+                statusBadge.className = 'badge badge-success';
+                statusBadge.innerHTML = '<i class="fas fa-circle" style="font-size:0.5rem;margin-right:4px;"></i> En línea';
+            }
+        } catch (error) {
+            console.error('Error updating metrics:', error);
+        }
+    }
+
+    // ============================================
+    // LOG DE ACTIVIDAD
+    // ============================================
+
+    function logActivity(message, type = 'info') {
+        const timestamp = new Date().toLocaleTimeString();
+        activityLogEntries.unshift({ timestamp, message, type });
+        if (activityLogEntries.length > MAX_LOG_ENTRIES) {
+            activityLogEntries.pop();
+        }
+        renderLog();
+    }
+
+    function renderLog() {
+        const container = document.getElementById('activityLog');
+        container.innerHTML = activityLogEntries.map(entry => `
+            <div class="log-entry">
+                <span class="time">[${entry.timestamp}]</span>
+                <span class="${entry.type}">${entry.message}</span>
+            </div>
+        `).join('');
+    }
+
+    // ============================================
+    // REFRESH
+    // ============================================
+
+    let isRefreshing = false;
+
+    window.refreshAll = async () => {
+        if (isRefreshing) return;
+        isRefreshing = true;
+        
+        const btn = document.getElementById('refreshBtn');
+        btn.classList.add('spinning');
+        
+        try {
+            await Promise.all([renderFlags(), updateMetrics()]);
+            logActivity('🔄 Dashboard actualizado', 'info');
+        } catch (error) {
+            logActivity(`❌ Error actualizando: ${error.message}`, 'error');
+        } finally {
+            btn.classList.remove('spinning');
+            isRefreshing = false;
+        }
+    };
+
+    // ============================================
+    // AUTO-REFRESH
+    // ============================================
+
+    // Actualizar cada 30 segundos
+    setInterval(() => {
+        updateMetrics();
+    }, 30000);
+
+    // Actualizar flags cada 60 segundos
+    setInterval(() => {
+        renderFlags();
+    }, 60000);
+
+    // ============================================
+    // INICIO
+    // ============================================
+
+    logActivity('🚀 Dashboard iniciado', 'success');
+    renderFlags();
+    updateMetrics();
+
+    // Actualizar métricas al cambiar de pestaña
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            updateMetrics();
+        }
+    });
+</script>
+</body>
+</html>
